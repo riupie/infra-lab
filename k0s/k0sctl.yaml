@@ -1,0 +1,48 @@
+apiVersion: k0sctl.k0sproject.io/v1beta1
+kind: Cluster
+metadata:
+  name: k0s-cluster
+spec:
+  hosts:
+  - ssh:
+      address: 192.168.10.10
+      user: cloud
+      port: 22
+    role: controller
+  - ssh:
+      address: 192.168.10.11
+      user: cloud
+      port: 22
+    role: worker
+  - ssh:
+      address: 192.168.10.12
+      user: cloud
+      port: 22
+    role: worker
+  k0s:
+    version: null
+    versionChannel: stable
+    dynamicConfig: false
+    config:
+      apiVersion: k0s.k0sproject.io/v1beta1
+      kind: ClusterConfig
+      metadata:
+        name: lab-cluster
+      spec:
+        network:
+          provider: calico
+        extensions:
+          storage:
+            type: openebs_local_storage
+          helm:
+            repositories:
+              - name: openebs-cstor
+                url: https://openebs.github.io/cstor-operators
+            charts:
+              - name: openebs-cstor
+                chartname: openebs-cstor/cstor
+                version: "3.6.0"
+                values: |
+                  csiNode:
+                    kubeletDir: /var/lib/k0s/kubelet/
+                namespace: openebs
