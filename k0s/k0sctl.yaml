@@ -1,7 +1,7 @@
 apiVersion: k0sctl.k0sproject.io/v1beta1
 kind: Cluster
 metadata:
-  name: k0s-cluster
+  name: lab-cluster
 spec:
   hosts:
   - ssh:
@@ -31,14 +31,23 @@ spec:
       spec:
         network:
           provider: calico
+          kubeProxy:
+            mode: ipvs
+            ipvs:
+              strictARP: true
         extensions:
           storage:
             type: openebs_local_storage
           helm:
             repositories:
+              - name: metallb
+                url: https://metallb.github.io/metallb
               - name: openebs-cstor
                 url: https://openebs.github.io/cstor-operators
             charts:
+              - name: metallb
+                chartname: metallb/metallb
+                namespace: metallb
               - name: openebs-cstor
                 chartname: openebs-cstor/cstor
                 version: "3.6.0"
