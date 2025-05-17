@@ -1,6 +1,6 @@
 terraform {
   backend "local" {
-    path = "./../tf-state/network/terraform.tfstate"
+    path = "./../tf-state/pool/terraform.tfstate"
   }
 
   encryption {
