@@ -6,7 +6,9 @@ repo_url: https://github.com/riupie/infra-lab
 docs_dir: .
 
 nav:
-  - Getting Started: README.md
+  - Getting Started:
+    - README.md
+    - Lab Architecture: docs/lab-architecture.md
 
 theme:
   name: material
@@ -23,6 +25,8 @@ theme:
 extra:
   version:
     provider: mike
+extra_css:
+  - docs/stylesheets/extra.css
 
 markdown_extensions:
   - meta
