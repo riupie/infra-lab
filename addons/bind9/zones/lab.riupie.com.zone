@@ -7,3 +7,5 @@ lab.riupie.com.		IN SOA	ns1.lab.riupie.com. admin.lab.riupie.com. (
 				86400      ; minimum (1 day)
 				)
 			NS	ns1.lab.riupie.com.
+			
+ns1.lab.riupie.com.     A       192.168.10.9
