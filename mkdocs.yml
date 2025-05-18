@@ -8,7 +8,7 @@ docs_dir: .
 nav:
   - Getting Started:
     - README.md
-    - Lab Architecture: docs/lab-architecture.md
+    - Lab Architecture: docs/getting-started/lab-architecture.md
 
 theme:
   name: material
