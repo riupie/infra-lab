@@ -1,7 +1,9 @@
 ## Overview
-<p align="center">
-  <img src="/docs/assets/imgs/lab-architecture.svg" width="900"/>
-</p>
+
+<figure markdown="span">
+  ![Lab Architecture](../assets/imgs/lab-architecture.svg){ width=900 }
+  <figcaption>Lab Architecture</figcaption>
+</figure>
 
 This document describes the network configuration and virtual machine layout for a KVM-based home lab using libvirt on a Linux host. It is intended as a reference for anyone wanting to replicate a similar setup.
 
