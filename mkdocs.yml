@@ -6,8 +6,7 @@ repo_url: https://github.com/riupie/infra-lab
 docs_dir: .
 
 nav:
-  - README.md
-  #- Tutorials: docs/tutorials/*
+  - Getting Started: README.md
 
 theme:
   name: material
