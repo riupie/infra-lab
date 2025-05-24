@@ -29,5 +29,5 @@ terraform {
 }
 
 provider "libvirt" {
-  uri = "qemu+ssh://root@jarvis.riupie.com/system?keyfile=~/.ssh/id_rsa_pepe&no_verify=1"
+  uri = "qemu+ssh://root@jarvis.riupie.com:3110/system?keyfile=~/.ssh/id_rsa_pepe&no_verify=1"
 }

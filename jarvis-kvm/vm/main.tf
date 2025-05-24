@@ -57,7 +57,7 @@ module "kube_worker" {
   source  = "git::https://github.com/riupie/terraform-libvirt-vm.git"
 
   vm_hostname_prefix = "worker"
-  vm_count    = 2
+  vm_count    = 3
   base_pool_name = data.terraform_remote_state.pool.outputs.pool_default
   base_volume_name = data.terraform_remote_state.pool.outputs.image_debian12
   memory      = "8196"
