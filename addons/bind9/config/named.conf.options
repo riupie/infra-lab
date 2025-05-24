@@ -1,0 +1,38 @@
+//The following keys are used for dynamic DNS updates
+include "/etc/bind/keys/external-dns.key";
+options {
+    directory "/var/cache/bind";
+    recursion yes;
+    allow-query { any; };
+
+    forwarders {
+        8.8.8.8;
+        1.1.1.1;
+    };
+
+    dnssec-validation auto;
+
+    listen-on { any; };
+    listen-on-v6 { any; };
+};
+logging {
+   channel stdout_channel {
+       stderr;
+       severity info;
+       print-category yes;
+       print-severity yes;
+       print-time yes;
+   };
+   category default {
+       stdout_channel;
+   };
+   category queries {
+       stdout_channel;
+   };
+   category security {
+       stdout_channel;
+   };
+   category dnssec {
+       stdout_channel;
+   };
+};

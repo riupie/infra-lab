@@ -1,0 +1,10 @@
+zone "lab.riupie.com" {
+    type master;
+    file "/zones/lab.riupie.com.zone";
+    allow-transfer {
+        key "externaldns-key";
+    };
+    update-policy {
+        grant externaldns-key zonesub any;
+    };
+};
