@@ -67,9 +67,10 @@ module "kube_worker" {
   dhcp        = false
   network_name = data.terraform_remote_state.network.outputs.network_name
   ip_address  = [
-                  "192.168.10.11",
-                  "192.168.10.12"
-                ]
+    "192.168.10.11",
+    "192.168.10.12",
+    "192.168.10.13"
+  ]
   ip_gateway  = "192.168.10.1"
   ip_nameserver = "8.8.8.8"
   local_admin = "debian"
