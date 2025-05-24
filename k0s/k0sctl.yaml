@@ -19,8 +19,13 @@ spec:
       user: cloud
       port: 22
     role: worker
+  - ssh:
+      address: 192.168.10.13
+      user: cloud
+      port: 22
+    role: worker
   k0s:
-    version: null
+    version: v1.33.1+k0s.0
     versionChannel: stable
     dynamicConfig: false
     config:
@@ -43,15 +48,8 @@ spec:
               - name: metallb
                 url: https://metallb.github.io/metallb
               - name: openebs-cstor
-                url: https://openebs.github.io/cstor-operators
+                url: https://openebs.github.io/openebs
             charts:
               - name: metallb
                 chartname: metallb/metallb
                 namespace: metallb
-              - name: openebs-cstor
-                chartname: openebs-cstor/cstor
-                version: "3.6.0"
-                values: |
-                  csiNode:
-                    kubeletDir: /var/lib/k0s/kubelet/
-                namespace: openebs
