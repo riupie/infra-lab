@@ -53,7 +53,7 @@ The following picture shows the high level components of opensource solutions us
     <tr>
         <td><img width="32" src="https://www.debian.org/Pics/openlogo-50.png"></td>
         <td><a href="https://debian.org/">Debian</a></td>
-        <td>Cluster nodes OS</td>
+        <td>Cluster nodes OS & Host OS</td>
     </tr>
     <tr>
         <td><img width="32" src="https://landscape.cncf.io/logos/f26381b645b2f14293a2a597bc98b5bbe1e5e086029de41830ba7c667353bf3e.svg"></td>
@@ -94,11 +94,6 @@ The following picture shows the high level components of opensource solutions us
         <td><img width="32" src="https://landscape.cncf.io/logos/d19371232c839420223f96327f99332bce52962724a113bd61f3eef10a0bc637.svg"></td>
         <td><a href="https://metallb.io/">MetalLB</a></td>
         <td>Load-balancer implementation for bare metal Kubernetes clusters</td>
-    </tr>
-    <tr>
-        <td><img width="32" src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Rocky_Linux_logo.svg/4096px-Rocky_Linux_logo.svg.png"></td>
-        <td><a href="https://rockylinux.org/">Rocky Linux</a></td>
-        <td>Host OS for Virtualization</td>
     </tr>
 </table>
 </div>

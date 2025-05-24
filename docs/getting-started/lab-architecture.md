@@ -17,7 +17,7 @@ The host machine (`jarvis`) has the following network interfaces:
 
 - **`enp8s0`**: Physical NIC connected to your LAN.
 - **`virbr1`**: Custom bridge for VMs to connect to each other with subnet 192.168.10.0/24.
-- **`vnet0–vnet3`**: Virtual interfaces created automatically by libvirt when VMs start; attached to `virbr1`.
+- **`vnetX`**: Virtual interfaces created automatically by libvirt when VMs start; attached to `virbr1`.
 
 ---
 
@@ -27,10 +27,11 @@ The home lab includes 4 running VMs:
 
 | ID | Name       | State   | Role                                  | Network Interface |
 |----|------------|---------|----------------------------------------|--------------------|
-| 2  | bastion01  | running | Internal DNS + Tailscale Exit Node     | vnet0              |
-| 3  | master01   | running | Kubernetes Control Plane               | vnet1              |
-| 4  | worker01   | running | Kubernetes Worker Node                 | vnet2              |
-| 5  | worker02   | running | Kubernetes Worker Node                 | vnet3              |
+| 2  | bastion01  | running | Internal DNS + Tailscale Exit Node     | vnet4              |
+| 3  | master01   | running | Kubernetes Control Plane               | vnet5              |
+| 4  | worker01   | running | Kubernetes Worker Node                 | vnet6              |
+| 5  | worker02   | running | Kubernetes Worker Node                 | vnet7              |
+| 6  | worker03   | running | Kubernetes Worker Node                 | vnet9              |
 
 Each VM is attached to the `virbr1` bridge network and can communicate with each other and the host.
 
