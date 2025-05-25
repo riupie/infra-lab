@@ -60,3 +60,28 @@ Currently, the `bastion01` VM serves two key roles:
 - Runs a Tailscale client authenticated to Tailnet.
 - Acts as a subnet router, advertising the internal VM network to my Tailnet.
 - Allows remote access to all VMs over Tailscale without port forwarding.
+
+## Hardware
+For this lab architecture, I use baremetal server with following spec:
+```
+       _,met$$$$$gg.          root@jarvis
+    ,g$$$$$$$$$$$$$$$P.       -----------
+  ,g$$P"     """Y$$.".        OS: Debian GNU/Linux 12 (bookworm) x86_64
+ ,$$P'              `$$$.     Kernel: 6.1.0-28-amd64
+',$$P       ,ggs.     `$$b:   Uptime: 5 days, 40 mins
+`d$$'     ,$P"'   .    $$$    Packages: 579 (dpkg)
+ $$P      d$'     ,    $$P    Shell: bash 5.2.15
+ $$:      $$.   -    ,d$$'    Resolution: 1280x1024
+ $$;      Y$b._   _,d$P'      Terminal: /dev/pts/10
+ Y$$.    `.`"Y$$$$P"'         CPU: AMD Ryzen 5 3600 (12) @ 3.600GHz
+ `$$b      "-.__              GPU: 07:00.0 ASPEED Technology, Inc. ASPEED Graphics Family
+  `Y$$                        Memory: 27776MiB / 64203MiB
+   `Y$$.
+     `$$b.
+       `Y$$b.
+          `"Y$b._
+              `"""
+
+```
+
+You can use your laptop instead of server as long you have enough CPU and RAM.

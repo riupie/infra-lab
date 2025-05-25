@@ -41,14 +41,10 @@ spec:
             ipvs:
               strictARP: true
         extensions:
-          storage:
-            type: openebs_local_storage
           helm:
             repositories:
               - name: metallb
                 url: https://metallb.github.io/metallb
-              - name: openebs-cstor
-                url: https://openebs.github.io/openebs
             charts:
               - name: metallb
                 chartname: metallb/metallb

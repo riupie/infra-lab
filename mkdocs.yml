@@ -10,7 +10,7 @@ nav:
   - Getting Started:
     - README.md
     - Lab Architecture: docs/getting-started/lab-architecture.md
-
+    - Quickstart: docs/getting-started/quickstart.md
 theme:
   name: material
   #custom_dir: docs/overrides
