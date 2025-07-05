@@ -24,6 +24,11 @@ spec:
       user: cloud
       port: 22
     role: worker
+  - ssh:
+      address: 192.168.10.13
+      user: cloud
+      port: 22
+    role: worker
   k0s:
     version: v1.33.1+k0s.0
     versionChannel: stable
