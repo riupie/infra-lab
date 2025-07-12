@@ -1,0 +1,28 @@
+- name: Add additional hosts to the cluster
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Get cluster interface IP address
+      set_fact:
+        cluster_ip: "{{ hostvars[inventory_hostname]['ansible_' + cluster_interface]['ipv4']['address'] }}"
+
+    - name: Add hosts to the cluster with their labels
+      ceph.automation.ceph_orch_host:
+        name: "{{ inventory_hostname }}"
+        address: "{{ cluster_ip }}"
+        labels: "{{ labels }}"
+      delegate_to: ceph01
+
+    - name: List hosts in the cluster (admin only)
+      when: inventory_hostname in groups['admin']
+      ansible.builtin.shell:
+        cmd: ceph orch host ls
+      register: host_list
+      delegate_to: ceph01
+
+    - name: Print current list of hosts (admin only)
+      when: inventory_hostname in groups['admin']
+      debug:
+        msg: "{{ host_list.stdout }}"

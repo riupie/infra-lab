@@ -1,0 +1,6 @@
+- name: Debug client group
+  hosts: all
+  tasks:
+    - name: Show client group
+      debug:
+        msg: "Client group is: {{ client_group }}"

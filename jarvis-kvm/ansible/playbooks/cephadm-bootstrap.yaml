@@ -1,0 +1,23 @@
+- name: Bootstrap the Ceph cluster on admin node
+  hosts: admin
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Get cluster interface IP address
+      set_fact:
+        cluster_ip: "{{ hostvars[inventory_hostname]['ansible_' + cluster_interface]['ipv4']['address'] }}"
+
+    - name: Bootstrap initial cluster
+      no_log: true
+      ceph.automation.cephadm_bootstrap:
+        mon_ip: "{{ cluster_ip }}"
+        dashboard_user: "{{ dashboard_user }}"
+        dashboard_password: "{{ dashboard_password }}"
+        allow_fqdn_hostname: true
+        cluster_network: 192.168.11.0/24
+        fsid: "{{ fsid }}"
+
+    - name: Enable ceph CLI access without podman digest pinning (optional)
+      shell: cephadm shell -- ceph config set mgr mgr/cephadm/use_repo_digest false
+      changed_when: false

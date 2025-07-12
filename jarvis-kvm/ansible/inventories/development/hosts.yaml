@@ -1,0 +1,33 @@
+all:
+  hosts:
+    ceph01:
+      ansible_host: 192.168.10.20
+      labels:
+        - osd
+        - mon
+        - mgr
+        - rgw
+        - _admin
+      monitor_address: 192.168.10.20
+    ceph02:
+      ansible_host: 192.168.10.21
+      labels:
+        - osd
+        - mon
+        - mgr
+        - rgw
+    ceph03:
+      ansible_host: 192.168.10.22
+      labels:
+        - osd
+        - mon
+        - mgr
+        - rgw
+    localhost:
+      ansible_connection: local
+admin:
+  hosts:
+    ceph01:
+clients:
+  hosts:
+    ceph01:
