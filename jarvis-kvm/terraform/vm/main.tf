@@ -79,7 +79,7 @@ module "kube_worker" {
 }
 
 module "ceph" {
-  source = "git::https://github.com/riupie/terraform-libvirt-vm.git?ref=multi-nic"
+  source = "git::https://github.com/riupie/terraform-libvirt-vm.git"
 
   vm_hostname_prefix = "ceph"
   vm_count           = 3
