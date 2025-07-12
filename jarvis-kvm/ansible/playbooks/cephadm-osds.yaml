@@ -1,0 +1,24 @@
+- name: Prepare and deploy OSDs
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Define OSD spec
+      set_fact:
+        osd_spec:
+          service_type: osd
+          service_id: osd.{{ inventory_hostname }}
+          placement:
+            label: "osd"
+          data_devices:
+            paths:
+              - /dev/vdb
+          db_devices:
+            paths:
+              - /dev/vdc
+
+    - name: Apply OSD specification
+      ceph.automation.ceph_orch_apply:
+        spec: "{{ osd_spec }}"
+      delegate_to: ceph01
