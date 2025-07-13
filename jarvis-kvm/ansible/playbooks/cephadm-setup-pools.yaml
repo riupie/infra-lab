@@ -29,6 +29,21 @@
         application: rbd
         state: present
 
+    - name: Create RBD replicated pool
+      ceph.automation.ceph_pool:
+        name: kubernetes
+        pg_num: 64
+        pgp_num: 64
+        pool_type: replicated
+        size: 3
+        state: present
+
+    - name: Enable RBD application on the replicated pool
+      ceph.automation.ceph_pool:
+        name: kubernetes
+        application: rbd
+        state: present
+
     - name: Create RGW data pool (erasure)
       ceph.automation.ceph_pool:
         name: default.rgw.buckets.data

@@ -23,11 +23,6 @@ all:
         - mon
         - mgr
         - rgw
-    localhost:
-      ansible_connection: local
 admin:
-  hosts:
-    ceph01:
-clients:
   hosts:
     ceph01:

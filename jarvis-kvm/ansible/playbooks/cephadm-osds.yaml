@@ -8,7 +8,7 @@
       set_fact:
         osd_spec:
           service_type: osd
-          service_id: osd.{{ inventory_hostname }}
+          service_id: osd_spec_default
           placement:
             label: "osd"
           data_devices:
