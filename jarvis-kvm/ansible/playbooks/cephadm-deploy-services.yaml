@@ -28,7 +28,7 @@
           service_id: default
           placement:
             label: rgw
-          rgw_frontend_port: 8080
+          rgw_frontend_port: 80
 
     ###########################################################
     # Ensure RGW listens on all interfaces explicitly         #
@@ -37,7 +37,7 @@
       ceph.automation.ceph_config:
         who: client.rgw
         option: rgw_frontends
-        value: "beast port=8080 ssl_port=8443"
+        value: "beast port=80 ssl_port=443"
 
     ###########################################################
     # Show running services                                   #

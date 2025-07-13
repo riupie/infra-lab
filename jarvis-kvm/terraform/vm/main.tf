@@ -1,5 +1,5 @@
 module "bastion" {
-  source = "git::https://github.com/riupie/terraform-libvirt-vm.git"
+  source = "git::https://github.com/riupie/terraform-libvirt-vm.git?ref=v1.0.0"
 
   vm_hostname_prefix = "bastion"
   vm_count           = 1
@@ -26,7 +26,7 @@ module "bastion" {
 }
 
 module "kube_master" {
-  source = "git::https://github.com/riupie/terraform-libvirt-vm.git"
+  source = "git::https://github.com/riupie/terraform-libvirt-vm.git?ref=v1.0.0"
 
   vm_hostname_prefix = "master"
   vm_count           = 1
@@ -52,7 +52,7 @@ module "kube_master" {
 }
 
 module "kube_worker" {
-  source = "git::https://github.com/riupie/terraform-libvirt-vm.git"
+  source = "git::https://github.com/riupie/terraform-libvirt-vm.git?ref=v1.0.0"
 
   vm_hostname_prefix = "worker"
   vm_count           = 2
