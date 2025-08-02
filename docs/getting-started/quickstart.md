@@ -48,7 +48,7 @@ tofu apply
 
 ```bash
 # From repo infra-lab root directory
-cd jarvis-kvm/storage-pool
+cd jarvis-kvm/terraform/storage-pool
 tofu init
 tofu apply
 ```
@@ -57,7 +57,7 @@ tofu apply
 
 ```bash
 # From repo infra-lab root directory
-cd jarvis-kvm/storage-pool
+cd jarvis-kvm/terraform/vm
 tofu init
 tofu apply
 ```
