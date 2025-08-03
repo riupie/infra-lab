@@ -1,87 +1,145 @@
+# Lab Architecture
 ## Overview
 
 <figure markdown="span">
   ![Lab Architecture](../assets/imgs/lab-architecture.svg){ width=900 }
-  <figcaption>Lab Architecture</figcaption>
+  <figcaption>Infrastructure Lab Architecture Diagram</figcaption>
 </figure>
 
-This document describes the network configuration and virtual machine layout for a KVM-based home lab using libvirt on a Linux host. It is intended as a reference for anyone wanting to replicate a similar setup.
+This document provides a comprehensive overview of the network configuration and virtual machine layout for a KVM-based home lab environment. The architecture uses libvirt for virtualization management on a Linux host and is designed for learning, development, and testing purposes.
+
+### Architecture Highlights
+
+- **Hypervisor**: KVM with libvirt management
+- **Network Design**: NAT-based virtual networks with custom bridges
+- **Service Discovery**: Internal DNS with Tailscale integration
+- **Orchestration**: Kubernetes cluster for container workloads
+- **Remote Access**: Tailscale subnet routing for secure external access
 
 ---
 
-## Host Network Interfaces Overview
+## Host Network Configuration
 
-The host machine (`jarvis`) has the following network interfaces:
+The host machine (`jarvis`) manages multiple network interfaces for VM connectivity and external access.
 
-### Interface Details
+### Network Interface Details
 
-- **`enp8s0`**: Physical NIC connected to your LAN.
-- **`virbr1`**: Custom bridge for VMs to connect to each other with subnet 192.168.10.0/24.
-- **`vnetX`**: Virtual interfaces created automatically by libvirt when VMs start; attached to `virbr1`.
-
----
-
-## Virtual Machines
-
-The home lab includes 4 running VMs:
-
-| ID | Name       | State   | Role                                  | Network Interface |
-|----|------------|---------|----------------------------------------|--------------------|
-| 2  | bastion01  | running | Internal DNS + Tailscale Exit Node     | vnet4              |
-| 3  | master01   | running | Kubernetes Control Plane               | vnet5              |
-| 4  | worker01   | running | Kubernetes Worker Node                 | vnet6              |
-| 5  | worker02   | running | Kubernetes Worker Node                 | vnet7              |
-| 6  | worker03   | running | Kubernetes Worker Node                 | vnet9              |
-
-Each VM is attached to the `virbr1` bridge network and can communicate with each other and the host.
+| Interface | Type | Purpose | Configuration |
+|-----------|------|---------|---------------|
+| **`enp8s0`** | Physical NIC | LAN connectivity | Connected to home/office network |
+| **`virbr1`** | Virtual Bridge | VM internal network | Subnet: `192.168.10.0/24` |
+| **`virbr1`** | Virtual Bridge | VM storage internal network | Subnet: `192.168.11.0/24` |
+| **`vnetX`** | Virtual TAP | VM network adapters | Auto-created by libvirt, attached to `virbr1` |
 
 ---
 
-## Networking Mode: NAT
+## Virtual Machine Inventory
 
-The `virbr1` interface operates in **NAT (Network Address Translation)** mode. This means:
+The lab environment consists of 5 virtual machines, each serving specific roles in the infrastructure:
 
-- VMs are on a **private subnet** managed by libvirt (e.g., `192.168.10.0/24`).
-- VMs can **access the internet** via the host’s connection.
-- VMs can **talk to each other** and the **host**.
-- LAN devices **cannot initiate connections** to the VMs by default. Port forwarding will be used to allow external access from Internet.
+| VM ID | Hostname | Status | Role | IP Address | Interface | Resources |
+|-------|----------|--------|------|------------|-----------|-----------|
+| 2 | **bastion01** | Running | DNS Server + Tailscale Router | `192.168.10.15` | vnet4 | 2 vCPU, 4GB RAM |
+| 3 | **master01** | Running | Kubernetes Control Plane | `192.168.10.10` | vnet5 | 2 vCPU, 4GB RAM |
+| 4 | **worker01** | Running | Kubernetes Worker Node | `192.168.10.11` | vnet6 | 2 vCPU, 8GB RAM |
+| 5 | **worker02** | Running | Kubernetes Worker Node | `192.168.10.12` | vnet7 | 2 vCPU, 8GB RAM |
+| 6 | **worker03** | Running | Kubernetes Worker Node | `192.168.10.13` | vnet9 | 2 vCPU, 8GB RAM |
 
-## Bastion: Internal DNS + Tailscale Agent
+### VM Connectivity
 
-Currently, the `bastion01` VM serves two key roles:
+- **Internal Communication**: All VMs connected via `virbr1` bridge (192.168.10.0/24)
+- **External Access**: NAT through host machine
+- **Service Discovery**: Internal DNS provided by bastion01
+- **Remote Access**: Tailscale subnet routing for external connectivity
 
-### 1. Internal DNS Server (BIND9)
+---
 
-- Provides **DNS resolution** for VMs using `BIND9`.
-- Hosts an **authoritative zone** for internal services (`*.lab.riupie.com`).
-- Forwards unknown queries to external DNS servers (e.g., 1.1.1.1, 8.8.8.8).
+## Network Architecture
 
-### 2. Tailscale Agent (Subnet Router / Exit Node)
-- Runs a Tailscale client authenticated to Tailnet.
-- Acts as a subnet router, advertising the internal VM network to my Tailnet.
-- Allows remote access to all VMs over Tailscale without port forwarding.
+### NAT-based Networking
 
-## Hardware
-For this lab architecture, I use baremetal server with following spec:
-```
-       _,met$$$$$gg.          root@jarvis
-    ,g$$$$$$$$$$$$$$$P.       -----------
-  ,g$$P"     """Y$$.".        OS: Debian GNU/Linux 12 (bookworm) x86_64
- ,$$P'              `$$$.     Kernel: 6.1.0-28-amd64
-',$$P       ,ggs.     `$$b:   Uptime: 5 days, 40 mins
-`d$$'     ,$P"'   .    $$$    Packages: 579 (dpkg)
- $$P      d$'     ,    $$P    Shell: bash 5.2.15
- $$:      $$.   -    ,d$$'    Resolution: 1280x1024
- $$;      Y$b._   _,d$P'      Terminal: /dev/pts/10
- Y$$.    `.`"Y$$$$P"'         CPU: AMD Ryzen 5 3600 (12) @ 3.600GHz
- `$$b      "-.__              GPU: 07:00.0 ASPEED Technology, Inc. ASPEED Graphics Family
-  `Y$$                        Memory: 27776MiB / 64203MiB
-   `Y$$.
-     `$$b.
-       `Y$$b.
-          `"Y$b._
-              `"""
+The lab uses NAT (Network Address Translation) mode for VM connectivity, providing isolation and security:
+
+| Feature | Description | Benefit |
+|---------|-------------|---------|
+| **Private Subnet** | VMs operate on `192.168.10.0/24` | Network isolation from external networks |
+| **Internet Access** | Outbound connectivity via host | VMs can reach external services |
+| **Internal Communication** | VM-to-VM and VM-to-host connectivity | Services can communicate internally |
+| **External Isolation** | No direct inbound access from LAN | Enhanced security posture |
+
+### Access Patterns
 
 ```
+Direction    | Source        | Destination   | Status
+-------------|---------------|---------------|--------
+Outbound     | VMs           | Internet      | ✅ Allowed
+Internal     | VM ↔ VM       | Internal IPs  | ✅ Allowed
+Host Access  | VMs ↔ Host    | Host Bridge   | ✅ Allowed
+Inbound      | LAN → VMs     | VM IPs        | ❌ Blocked (NAT)
+```
 
-You can use your laptop instead of server as long you have enough CPU and RAM.
+!!! note
+    External access to VMs requires either port forwarding or Tailscale subnet routing.
+
+## Infrastructure Services
+
+### Bastion Host (bastion01)
+
+The bastion host provides critical infrastructure services for the lab environment:
+
+#### Internal DNS Server (BIND9)
+
+| Service | Configuration | Purpose |
+|---------|---------------|---------|
+| **DNS Software** | BIND9 | Authoritative DNS for internal zone |
+| **Zone** | `*.lab.riupie.com` | Internal service discovery |
+| **Forwarders** | 1.1.1.1, 8.8.8.8 | External DNS resolution |
+| **Clients** | All lab VMs | Centralized name resolution |
+
+#### Tailscale Integration
+
+| Feature | Configuration | Benefit |
+|---------|---------------|---------|
+| **Subnet Router** | Advertises `192.168.10.0/24` | Remote access to entire lab |
+| **Exit Node** | Optional internet routing | Secure external connectivity |
+| **Authentication** | Tailnet integration | SSO-based access control |
+| **Encryption** | WireGuard protocol | Zero-trust network security |
+
+## Hardware Requirements
+
+### Production Host Specifications
+
+The lab runs on a dedicated bare-metal server with the following specifications:
+
+| Component | Specification | Usage |
+|-----------|---------------|--------|
+| **CPU** | AMD Ryzen 5 3600 (12 cores @ 3.6GHz) | VM compute resources |
+| **Memory** | 64GB DDR4 | VM memory allocation |
+| **Storage** | SSD storage pool | VM disk images and data |
+| **Network** | 1Gbps Ethernet | Internet and LAN connectivity |
+| **OS** | Debian GNU/Linux 12 (bookworm) | KVM hypervisor host |
+
+### Host System Details
+
+```bash
+# System Information
+OS: Debian GNU/Linux 12 (bookworm) x86_64
+Kernel: 6.1.0-28-amd64
+CPU: AMD Ryzen 5 3600 (12) @ 3.600GHz
+Memory: 64GB DDR4
+Virtualization: KVM with libvirt
+```
+
+### Minimum Requirements
+
+For testing or development environments, you can use alternative hardware:
+
+| Component | Minimum | Recommended | Notes |
+|-----------|---------|-------------|-------|
+| **CPU** | 4 cores | 8+ cores | Must support virtualization (VT-x/AMD-V) |
+| **Memory** | 16GB | 32GB+ | 4GB per VM + host overhead |
+| **Storage** | 100GB | 500GB+ | SSD recommended for performance |
+| **Network** | 1Gbps | 1Gbps+ | For VM and container networking |
+
+!!! note
+    Laptop or desktop systems can be used as long as they meet the minimum requirements and support hardware virtualization.
