@@ -152,16 +152,3 @@ The cluster provides different storage pools optimized for specific use cases:
 
 1. **[Deployment Guide](deployment.md)** - Complete installation and configuration
 2. **[Kubernetes Integration](integrations/kubernetes.md)** - CSI driver setup and usage examples
-
-## Monitoring and Health
-
-### Key Metrics to Monitor
-- **Cluster Health**: `ceph -s`
-- **Storage Usage**: `ceph df`
-- **OSD Status**: `ceph osd tree`
-- **Pool Statistics**: `ceph osd pool stats`
-
-### Health Indicators
-- ✅ **HEALTH_OK**: All systems operational
-- ⚠️ **HEALTH_WARN**: Minor issues, investigate
-- ❌ **HEALTH_ERR**: Critical issues, immediate action required
