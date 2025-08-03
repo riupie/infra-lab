@@ -34,10 +34,11 @@ infra-lab/
 ├── docs/
 ├── jarvis-kvm/
 │   ├── ansible/
-│   └── terraform/
-|       ├── networks/
-│       ├── storage-pool/
-│       └── vm/
+│   └── terraform
+│       ├── networks
+│       ├── storage-pool
+│       ├── tf-state
+│       └── vm
 └── k0s/
 ```
 
