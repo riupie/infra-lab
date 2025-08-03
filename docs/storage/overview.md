@@ -143,7 +143,6 @@ The cluster provides different storage pools optimized for specific use cases:
 - **Username**: `admin`
 - **Features**: Cluster monitoring, pool management, OSD operations, performance metrics
 
-
 ### Object Storage (S3)
 - **Endpoint**: http://192.168.10.20:80
 - **Compatibility**: AWS S3 API compatible
