@@ -10,7 +10,10 @@ nav:
   - Getting Started:
     - README.md
     - Lab Architecture: docs/getting-started/lab-architecture.md
-    - Quickstart: docs/getting-started/quickstart.md
+    - Quickstart:
+      - Prerequisites: docs/getting-started/prerequisites.md
+      - Infrastructure Deployment: docs/getting-started/infrastructure-deployment.md
+      - Kubernetes Setup: docs/getting-started/kubernetes-setup.md
   - Storage:
     - Overview: docs/storage/overview.md
     - Deployment: docs/storage/deployment.md

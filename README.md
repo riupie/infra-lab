@@ -8,17 +8,22 @@ Every step of the process—from planning and designing the cluster architecture
 
 ```
 .
-├── .gitattributes
-├── .git-crypt
-│   ├── .gitattributes
-│   └── keys
-├── .gitignore
-├── LICENSE
+├── addons
+│   └── bind9
+├── docs
+│   ├── assets
+│   ├── getting-started
+│   ├── storage
+│   └── stylesheets
 ├── jarvis-kvm
-│   ├── networks
-│   ├── tf-state
-│   └── vm
-└── README.md
+│   ├── ansible
+│   └── terraform
+├── k0s
+│   └── k0sctl.yaml
+├── LICENSE
+├── mkdocs.yml
+├── README.md
+└── requirements.txt
 ```
 
 `.git-crypt`: contains gpg files of collaborators who can open encrypted git-crypt file.
