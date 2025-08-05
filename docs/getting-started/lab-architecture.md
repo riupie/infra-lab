@@ -28,8 +28,8 @@ The host machine (`jarvis`) manages multiple network interfaces for VM connectiv
 |-----------|------|---------|---------------|
 | **`enp8s0`** | Physical NIC | LAN connectivity | Connected to home/office network |
 | **`virbr1`** | Virtual Bridge | VM internal network | Subnet: `192.168.10.0/24` |
-| **`virbr1`** | Virtual Bridge | VM storage internal network | Subnet: `192.168.11.0/24` |
-| **`vnetX`** | Virtual TAP | VM network adapters | Auto-created by libvirt, attached to `virbr1` |
+| **`virbr2`** | Virtual Bridge | VM storage internal network | Subnet: `192.168.11.0/24` |
+| **`vnetX`** | Virtual TAP | VM network adapters | Auto-created by libvirt, attached to `virbr1` and `virbr2` |
 
 ---
 
@@ -60,11 +60,10 @@ The lab environment consists of 5 virtual machines, each serving specific roles 
 
 The lab uses NAT (Network Address Translation) mode for VM connectivity, providing isolation and security:
 
-| Feature | Description | Benefit |
+| Feature | Description | Note |
 |---------|-------------|---------|
-| **Private Subnet** | VMs operate on `192.168.10.0/24` | Network isolation from external networks |
+| **Private Subnet** | VMs operate on `192.168.10.0/24` and `192.168.11.0/24` | Network isolation from external networks |
 | **Internet Access** | Outbound connectivity via host | VMs can reach external services |
-| **Internal Communication** | VM-to-VM and VM-to-host connectivity | Services can communicate internally |
 | **External Isolation** | No direct inbound access from LAN | Enhanced security posture |
 
 ### Access Patterns

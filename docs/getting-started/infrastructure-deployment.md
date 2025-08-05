@@ -7,7 +7,7 @@ This guide walks through the automated deployment of virtual infrastructure usin
 
 | Component | Description | Configuration |
 |-----------|-------------|---------------|
-| **Virtual Network** | NAT bridge for VM connectivity | `virbr1` - 192.168.10.0/24 |
+| **Virtual Network** | NAT bridge for VM connectivity | `virbr1` - 192.168.10.0/24 & `virbr2` - 192.168.11.0/24|
 | **Storage Pool** | Disk storage for VM images | `/var/lib/libvirt/images/` |
 | **Virtual Machines** | 5 VMs for the lab environment | 1 bastion + 1 control plane + 3 workers |
 
@@ -61,9 +61,9 @@ tofu apply
 ```
 
 **What this creates:**
-- Virtual bridge (`virbr1`) with NAT configuration
-- Network subnet: `192.168.10.0/24`
-- Gateway: `192.168.10.1`
+- Virtual bridge (`virbr1` and `virbr2`) with NAT configuration
+- Network subnet: `192.168.10.0/24` (net-lab), `192.168.11.0/24` (ceph-lab)
+- Gateway: `192.168.10.1`, `192.168.11.1`
 
 ### Verify Network Creation
 

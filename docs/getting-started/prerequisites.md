@@ -69,6 +69,19 @@ sudo mv tofu /usr/local/bin/
 tofu version
 ```
 
+### Encrypt terraform state
+Terraform state file can be encrypted at rest by defining encryption configuration on backend configuration like [this](https://github.com/riupie/infra-lab/blob/17ba3ee57b26277b25bbf172515fc0ea4f943ab4/jarvis-kvm/terraform/vm/providers.tf#L6). For simplicity, I use PBKDF2 key to encrypt the state and then store the key on environment variable `TF_ENCRYPTION`. Store `TF_ENCRYPTION` on `.bashrc`/`.zshrc` (depends on your shell).
+
+```bash
+export TF_ENCRYPTION='key_provider "pbkdf2" "key" {
+     passphrase    = "e7222fca0e62f64c0exxxxxxxxxxxxxxxxxx"
+     key_length    = 32
+     salt_length   = 16
+     hash_function = "sha256"
+   }'
+
+```
+
 ### Install Additional Tools
 
 ```bash

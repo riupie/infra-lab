@@ -27,7 +27,7 @@ ping -c 2 192.168.10.13  # worker03
 ssh cloud@192.168.10.10 "hostname && uptime"
 ```
 
-## k0sctl Installation
+## k0sctl Installation (from Bastion)
 
 ### Install k0sctl
 
@@ -98,10 +98,8 @@ The deployment performs the following steps:
 
 ```bash
 # Generate kubeconfig
-k0sctl kubeconfig --config k0sctl.yaml > kubeconfig
-
-# Set KUBECONFIG environment variable
-export KUBECONFIG=$(pwd)/kubeconfig
+mkdir ~/.kube
+k0sctl kubeconfig --config k0sctl.yaml > ~/.kube/config
 
 # Verify kubectl access
 kubectl cluster-info
