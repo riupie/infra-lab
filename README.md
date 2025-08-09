@@ -56,9 +56,9 @@ The following picture shows the high level components of opensource solutions us
         <td>Automate OS initial installation</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://www.debian.org/Pics/openlogo-50.png"></td>
-        <td><a href="https://debian.org/">Debian</a></td>
-        <td>Cluster nodes OS & Host OS</td>
+        <td><img width="32" src="https://ceph.io/assets/favicons/android-chrome-192x192.png"></td>
+        <td><a href="https://ceph.io/">Ceph</a></td>
+        <td>Distributed Storage</td>
     </tr>
     <tr>
         <td><img width="32" src="https://landscape.cncf.io/logos/f26381b645b2f14293a2a597bc98b5bbe1e5e086029de41830ba7c667353bf3e.svg"></td>
@@ -74,6 +74,11 @@ The following picture shows the high level components of opensource solutions us
         <td><img width="32" src="https://coredns.io/images/CoreDNS_Colour_Horizontal.png"></td>
         <td><a href="https://coredns.io/">CoreDNS</a></td>
         <td>Kubernetes DNS</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://www.debian.org/Pics/openlogo-50.png"></td>
+        <td><a href="https://debian.org/">Debian</a></td>
+        <td>Cluster nodes OS & Host OS</td>
     </tr>
     <tr>
         <td><img width="32" src="https://kubernetes-sigs.github.io/external-dns/v0.15.0/docs/img/external-dns.png" alt="external-dns logo"></td>
