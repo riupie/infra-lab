@@ -161,8 +161,15 @@ ansible all -i inventories/development/hosts.yaml -m shell -a "podman --version"
 
 ```bash
 # Initialize the Ceph cluster on the admin node
-ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags bootstrap
+ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags bootstrap --ask-vault-pass
 ```
+
+!!! info
+    All variables are stored under `inventories/development/group_vars`. Use this command to encrypt and view the encrypted vault:
+    ```
+    ansible-vault encrypt inventories/development/group_vars/admin.yaml
+    ansible-vault view inventories/development/group_vars/admin.yaml 
+    ```
 
 #### Bootstrap Process
 
@@ -197,7 +204,7 @@ services:
 
 ```bash
 # Distribute cephadm SSH keys between nodes and add all nodes to cluster with appropriate labels
-ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags add_nodes
+ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags add_nodes --ask-vault-pass
 ```
 
 !!! info
@@ -211,7 +218,7 @@ ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags add_node
 #### Step 4.1: Core Services
 ```bash
 # Deploy MON, MGR, and RGW services
-ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags deploy_services
+ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags deploy_services --ask-vault-pass
 ```
 
 !!! info
@@ -223,7 +230,7 @@ ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags deploy_s
 #### Step 4.2: OSD Deployment
 ```bash
 # Configure and deploy Object Storage Daemons
-ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags configure_osds
+ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags configure_osds --ask-vault-pass
 ```
 !!! info
     OSD configuration:
@@ -235,7 +242,7 @@ ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags configur
 
 ```bash
 # Create storage pools for different use cases
-ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags configure_pools
+ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags configure_pools --ask-vault-pass
 ```
 !!! info
     Created some ceph pools:
@@ -251,10 +258,10 @@ For experienced users or automated deployments:
 
 ```bash
 # Deploy entire cluster in one run
-ansible-playbook -i inventories/development/hosts.yaml site.yaml
+ansible-playbook -i inventories/development/hosts.yaml site.yaml --ask-vault-pass
 
 # Deploy with verbose output for troubleshooting
-ansible-playbook -i inventories/development/hosts.yaml site.yaml -v
+ansible-playbook -i inventories/development/hosts.yaml site.yaml --ask-vault-pass -v
 ```
 
 !!! note

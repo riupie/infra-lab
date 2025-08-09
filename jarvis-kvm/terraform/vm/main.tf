@@ -84,7 +84,7 @@ module "ceph" {
   vm_hostname_prefix = "ceph"
   vm_count           = 3
   base_pool_name     = data.terraform_remote_state.pool.outputs.pool_default
-  base_volume_name   = data.terraform_remote_state.pool.outputs.image_rocky9
+  base_volume_name   = data.terraform_remote_state.pool.outputs.image_centos9
   disable_ipv6       = true
   additional_disks = {
     0 = [
