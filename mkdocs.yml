@@ -19,6 +19,9 @@ nav:
     - Deployment: docs/storage/deployment.md
     - Integrations:
       - Kubernetes: docs/storage/integrations/kubernetes.md
+  - External Services:
+    - BIND9 DNS:
+      - Deployment: docs/external-services/bind9/deployment.md
 
 theme:
   name: material
