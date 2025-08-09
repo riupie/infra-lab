@@ -168,7 +168,11 @@ ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags bootstra
     All variables are stored under `inventories/development/group_vars`. Use this command to encrypt and view the encrypted vault:
     ```
     ansible-vault encrypt inventories/development/group_vars/admin.yaml
-    ansible-vault view inventories/development/group_vars/admin.yaml 
+    ansible-vault view inventories/development/group_vars/admin.yaml
+
+    # dashboard_user: admin
+    # dashboard_password: b0b0yb0ys3cr3t
+    # fsid: 47c6b1da-6271-43a2-9e52-50183ee3fa7e
     ```
 
 #### Bootstrap Process
