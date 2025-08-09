@@ -1,0 +1,56 @@
+apiVersion: k0sctl.k0sproject.io/v1beta1
+kind: Cluster
+metadata:
+  name: lab-cluster
+spec:
+  hosts:
+  - ssh:
+      address: 192.168.10.10
+      user: cloud
+      port: 22
+    role: controller
+  - ssh:
+      address: 192.168.10.11
+      user: cloud
+      port: 22
+    role: worker
+  - ssh:
+      address: 192.168.10.12
+      user: cloud
+      port: 22
+    role: worker
+  - ssh:
+      address: 192.168.10.13
+      user: cloud
+      port: 22
+    role: worker
+  - ssh:
+      address: 192.168.10.13
+      user: cloud
+      port: 22
+    role: worker
+  k0s:
+    version: v1.33.1+k0s.0
+    versionChannel: stable
+    dynamicConfig: false
+    config:
+      apiVersion: k0s.k0sproject.io/v1beta1
+      kind: ClusterConfig
+      metadata:
+        name: lab-cluster
+      spec:
+        network:
+          provider: calico
+          kubeProxy:
+            mode: ipvs
+            ipvs:
+              strictARP: true
+        extensions:
+          helm:
+            repositories:
+              - name: metallb
+                url: https://metallb.github.io/metallb
+            charts:
+              - name: metallb
+                chartname: metallb/metallb
+                namespace: metallb

@@ -1,0 +1,11 @@
+$TTL 3600	; 1 hour
+lab.riupie.com.		IN SOA	ns1.lab.riupie.com. admin.lab.riupie.com. (
+				2025050307 ; serial
+				3600       ; refresh (1 hour)
+				1800       ; retry (30 minutes)
+				604800     ; expire (1 week)
+				86400      ; minimum (1 day)
+				)
+			NS	ns1.lab.riupie.com.
+			
+ns1.lab.riupie.com.     A       192.168.10.9

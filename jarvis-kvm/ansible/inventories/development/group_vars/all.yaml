@@ -1,0 +1,43 @@
+---
+ceph_origin: community
+ceph_mirror: https://download.ceph.com
+ceph_stable_key: https://download.ceph.com/keys/release.asc
+ceph_release: squid
+ceph_community_repo_baseurl: "{{ ceph_mirror }}/rpm-{{ ceph_release }}/el{{ ansible_facts['distribution_major_version'] }}/"
+upgrade_ceph_packages: false
+ceph_pkgs:
+  - cephadm
+  - ceph-common
+ceph_client_pkgs:
+  - chrony
+  - ceph-common
+infra_pkgs:
+  - chrony
+  - podman
+  - lvm2
+  - sos
+  - rpcbind
+  - firewalld
+client_group: clients
+keyring: "/etc/ceph/ceph.client.admin.keyring"
+
+admin_node: 192.168.10.20
+cephadm_ssh_user: cloud
+public_interface: eth0
+cluster_interface: eth1
+public_network: 192.168.10.0/24
+cluster_network: 192.168.11.0/24
+ceph_config_defaults:
+  - { who: global, option: osd_pool_default_pg_autoscale_mode, value: "on" }
+  - { who: global, option: osd_max_backfills, value: 4 }
+  - { who: global, option: osd_pool_default_min_size, value: 2 }
+  - { who: global, option: osd_pool_default_size, value: 3 }
+  - { who: global, option: mon_clock_drift_allowed, value: 0.5 }
+  - { who: global, option: mon_clock_drift_warn_backoff, value: 30 }
+  - { who: global, option: mon_allow_pool_delete, value: true }
+  - { who: mon, option: mon_max_pg_per_osd, value: 300 }
+  - { who: mgr, option: mgr/cephadm/use_repo_digest, value: false }
+  - { who: mgr, option: mgr/dashboard/server_port, value: "8080" }
+  - { who: mgr, option: mgr/dashboard/server_addr, value: "0.0.0.0" }
+  - { who: mgr, option: mgr/dashboard/ssl, value: true }
+  - { who: mgr, option: mgr/dashboard/ssl_server_port, value: "8443" }

@@ -1,0 +1,32 @@
+---
+- name: Setup host mappings
+  import_playbook: playbooks/setup-hosts.yaml
+  tags: [preflight]
+
+- name: Run Ceph cluster bootstrap
+  import_playbook: playbooks/cephadm-preflight.yml
+  tags: [preflight]
+
+- name: Run Ceph cluster bootstrap
+  import_playbook: playbooks/cephadm-bootstrap.yaml
+  tags: [bootstrap]
+
+- name: Distribute SSH keys between nodes
+  import_playbook: playbooks/cephadm-distribute-ssh-key.yml
+  tags: [add_nodes]
+
+- name: Add Ceph cluster nodes
+  import_playbook: playbooks/cephadm-add-nodes.yaml
+  tags: [add_nodes]
+
+- name: Deploy core Ceph services
+  import_playbook: playbooks/cephadm-deploy-services.yaml
+  tags: [deploy_services]
+
+- name: Prepare and deploy OSDs
+  import_playbook: playbooks/cephadm-osds.yaml
+  tags: [configure_osds]
+
+- name: Create RBD and RGW pools
+  import_playbook: playbooks/cephadm-setup-pools.yaml
+  tags: [configure_pools]

@@ -1,0 +1,60 @@
+- name: Deploy core Ceph services and bind Dashboard & RGW to all networks
+  hosts: admin
+  become: true
+  gather_facts: false
+
+  tasks:
+    ###########################################################
+    # Service placement using inventory labels                #
+    ###########################################################
+    - name: Deploy MONs
+      ceph.automation.ceph_orch_apply:
+        spec: |
+          service_type: mon
+          placement:
+            label: mon
+
+    - name: Deploy MGRs
+      ceph.automation.ceph_orch_apply:
+        spec: |
+          service_type: mgr
+          placement:
+            label: mgr
+
+    - name: Deploy RGW service
+      ceph.automation.ceph_orch_apply:
+        spec:
+          service_type: rgw
+          service_id: default
+          placement:
+            label: rgw
+          rgw_frontend_port: 80
+
+    ###########################################################
+    # Ensure RGW listens on all interfaces explicitly         #
+    ###########################################################
+    - name: Configure RGW frontends to listen on 0.0.0.0
+      ceph.automation.ceph_config:
+        who: client.rgw
+        option: rgw_frontends
+        value: "beast port=80 ssl_port=443"
+
+    ###########################################################
+    # Show running services                                   #
+    ###########################################################
+    - name: Print service status
+      shell: ceph orch ps
+      register: svc_status
+
+    - name: Show running services
+      debug:
+        msg: "{{ svc_status.stdout }}"
+
+    - name: Set Ceph configuration parameters
+      ceph.automation.ceph_config:
+        who: "{{ item.who }}"
+        option: "{{ item.option }}"
+        value: "{{ item.value }}"
+      loop: "{{ ceph_config_defaults }}"
+      loop_control:
+        label: "{{ item.who }} {{ item.option }}"

@@ -1,0 +1,14 @@
+services:
+  bind9:
+    image: internetsystemsconsortium/bind9:9.20
+    container_name: bind9
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+    volumes:
+      - ./config:/etc/bind
+      - ./zones:/zones
+      - ./cache:/var/cache/bind
+    restart: unless-stopped
+    environment:
+      - TZ=UTC

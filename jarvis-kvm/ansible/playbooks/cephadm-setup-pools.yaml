@@ -1,0 +1,75 @@
+- name: Create RBD and RGW pools using Ceph modules (idempotent)
+  hosts: admin
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Create erasure-coded profile (if not exists)
+      ceph.automation.ceph_ec_profile:
+        name: ec-profile
+        k: 2
+        m: 1
+        plugin: jerasure
+        technique: reed_sol_van
+        crush_device_class: hdd
+        state: present
+
+    - name: Create erasure-coded RBD data pool
+      ceph.automation.ceph_pool:
+        name: rbd_ec
+        pg_num: 64
+        pgp_num: 64
+        pool_type: erasure
+        erasure_profile: ec-profile
+        state: present
+
+    - name: Enable RBD application on RBD EC pool
+      ceph.automation.ceph_pool:
+        name: rbd_ec
+        application: rbd
+        state: present
+
+    - name: Create RBD replicated pool
+      ceph.automation.ceph_pool:
+        name: kubernetes
+        pg_num: 64
+        pgp_num: 64
+        pool_type: replicated
+        size: 3
+        state: present
+
+    - name: Enable RBD application on the replicated pool
+      ceph.automation.ceph_pool:
+        name: kubernetes
+        application: rbd
+        state: present
+
+    - name: Create RGW data pool (erasure)
+      ceph.automation.ceph_pool:
+        name: default.rgw.buckets.data
+        pg_num: 64
+        pgp_num: 64
+        pool_type: erasure
+        erasure_profile: ec-profile
+        state: present
+
+    - name: Enable RGW application on data pool
+      ceph.automation.ceph_pool:
+        name: default.rgw.buckets.data
+        application: rgw
+        state: present
+
+    - name: Create RGW index pool (replicated)
+      ceph.automation.ceph_pool:
+        name: default.rgw.buckets.index
+        pg_num: 32
+        pgp_num: 32
+        pool_type: replicated
+        size: 3
+        state: present
+
+    - name: Enable RGW application on index pool
+      ceph.automation.ceph_pool:
+        name: default.rgw.buckets.index
+        application: rgw
+        state: present

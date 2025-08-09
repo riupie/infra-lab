@@ -1,0 +1,1724 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+        <meta name="author" content="riupie maintainers">
+      
+      
+        <link rel="canonical" href="https://riupie.com/infra-lab/docs/getting-started/lab-architecture/">
+      
+      
+        <link rel="prev" href="../../..">
+      
+      
+        <link rel="next" href="../prerequisites/">
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.16">
+    
+    
+      
+        <title>Lab Architecture - infra-lab</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.7e37652d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#lab-architecture" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="infra-lab" class="md-header__button md-logo" aria-label="infra-lab" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            infra-lab
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Lab Architecture
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/riupie/infra-lab" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    riupie/infra-lab
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../.." class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../storage/overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Storage
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../external-services/bind9/deployment/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  External Services
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="infra-lab" class="md-nav__button md-logo" aria-label="infra-lab" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    infra-lab
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/riupie/infra-lab" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    riupie/infra-lab
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../.." class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1" id="__nav_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            Getting Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Lab Architecture
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Lab Architecture
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#architecture-highlights" class="md-nav__link">
+    <span class="md-ellipsis">
+      Architecture Highlights
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#host-network-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Host Network Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Host Network Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#network-interface-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Interface Details
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#virtual-machine-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      Virtual Machine Inventory
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Virtual Machine Inventory">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vm-connectivity" class="md-nav__link">
+    <span class="md-ellipsis">
+      VM Connectivity
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Architecture
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Network Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nat-based-networking" class="md-nav__link">
+    <span class="md-ellipsis">
+      NAT-based Networking
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#access-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Access Patterns
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#infrastructure-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Infrastructure Services
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Infrastructure Services">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bastion-host-bastion01" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bastion Host (bastion01)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bastion Host (bastion01)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#internal-dns-server-bind9" class="md-nav__link">
+    <span class="md-ellipsis">
+      Internal DNS Server (BIND9)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tailscale-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tailscale Integration
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hardware-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hardware Requirements
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Hardware Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#production-host-specifications" class="md-nav__link">
+    <span class="md-ellipsis">
+      Production Host Specifications
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#host-system-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      Host System Details
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minimum-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Minimum Requirements
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_3" id="__nav_1_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Quickstart
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            Quickstart
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prerequisites/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Prerequisites
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../infrastructure-deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Infrastructure Deployment
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kubernetes-setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Kubernetes Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Storage
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Storage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../storage/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../storage/deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Deployment
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Integrations
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            Integrations
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../storage/integrations/kubernetes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Kubernetes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    External Services
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            External Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_1" id="__nav_3_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    BIND9 DNS
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            BIND9 DNS
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../external-services/bind9/deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Deployment
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#architecture-highlights" class="md-nav__link">
+    <span class="md-ellipsis">
+      Architecture Highlights
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#host-network-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Host Network Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Host Network Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#network-interface-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Interface Details
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#virtual-machine-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      Virtual Machine Inventory
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Virtual Machine Inventory">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vm-connectivity" class="md-nav__link">
+    <span class="md-ellipsis">
+      VM Connectivity
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Architecture
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Network Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nat-based-networking" class="md-nav__link">
+    <span class="md-ellipsis">
+      NAT-based Networking
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#access-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Access Patterns
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#infrastructure-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Infrastructure Services
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Infrastructure Services">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bastion-host-bastion01" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bastion Host (bastion01)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bastion Host (bastion01)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#internal-dns-server-bind9" class="md-nav__link">
+    <span class="md-ellipsis">
+      Internal DNS Server (BIND9)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tailscale-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tailscale Integration
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hardware-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hardware Requirements
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Hardware Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#production-host-specifications" class="md-nav__link">
+    <span class="md-ellipsis">
+      Production Host Specifications
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#host-system-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      Host System Details
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minimum-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Minimum Requirements
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="lab-architecture">Lab Architecture<a class="headerlink" href="#lab-architecture" title="Permanent link">&para;</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<figure><br />
+<img alt="Lab Architecture" src="../../assets/imgs/lab-architecture.svg" width="900" /><br />
+<br />
+<br />
+<figcaption>Infrastructure Lab Architecture Diagram</figcaption><br />
+</figure>
+<p>This document provides a comprehensive overview of the network configuration and virtual machine layout for a KVM-based home lab environment. The architecture uses libvirt for virtualization management on a Linux host and is designed for learning, development, and testing purposes.</p>
+<h3 id="architecture-highlights">Architecture Highlights<a class="headerlink" href="#architecture-highlights" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Hypervisor</strong>: KVM with libvirt management</li>
+<li><strong>Network Design</strong>: NAT-based virtual networks with custom bridges</li>
+<li><strong>Service Discovery</strong>: Internal DNS with Tailscale integration</li>
+<li><strong>Orchestration</strong>: Kubernetes cluster for container workloads</li>
+<li><strong>Remote Access</strong>: Tailscale subnet routing for secure external access</li>
+</ul>
+<hr />
+<h2 id="host-network-configuration">Host Network Configuration<a class="headerlink" href="#host-network-configuration" title="Permanent link">&para;</a></h2>
+<p>The host machine (<code>jarvis</code>) manages multiple network interfaces for VM connectivity and external access.</p>
+<h3 id="network-interface-details">Network Interface Details<a class="headerlink" href="#network-interface-details" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Interface</th>
+<th>Type</th>
+<th>Purpose</th>
+<th>Configuration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>enp8s0</code></strong></td>
+<td>Physical NIC</td>
+<td>LAN connectivity</td>
+<td>Connected to home/office network</td>
+</tr>
+<tr>
+<td><strong><code>virbr1</code></strong></td>
+<td>Virtual Bridge</td>
+<td>VM internal network</td>
+<td>Subnet: <code>192.168.10.0/24</code></td>
+</tr>
+<tr>
+<td><strong><code>virbr2</code></strong></td>
+<td>Virtual Bridge</td>
+<td>VM storage internal network</td>
+<td>Subnet: <code>192.168.11.0/24</code></td>
+</tr>
+<tr>
+<td><strong><code>vnetX</code></strong></td>
+<td>Virtual TAP</td>
+<td>VM network adapters</td>
+<td>Auto-created by libvirt, attached to <code>virbr1</code> and <code>virbr2</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="virtual-machine-inventory">Virtual Machine Inventory<a class="headerlink" href="#virtual-machine-inventory" title="Permanent link">&para;</a></h2>
+<p>The lab environment consists of 5 virtual machines, each serving specific roles in the infrastructure:</p>
+<table>
+<thead>
+<tr>
+<th>VM ID</th>
+<th>Hostname</th>
+<th>Status</th>
+<th>Role</th>
+<th>IP Address</th>
+<th>Interface</th>
+<th>Resources</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2</td>
+<td><strong>bastion01</strong></td>
+<td>Running</td>
+<td>DNS Server + Tailscale Router</td>
+<td><code>192.168.10.15</code></td>
+<td>vnet4</td>
+<td>2 vCPU, 4GB RAM</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>master01</strong></td>
+<td>Running</td>
+<td>Kubernetes Control Plane</td>
+<td><code>192.168.10.10</code></td>
+<td>vnet5</td>
+<td>2 vCPU, 4GB RAM</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>worker01</strong></td>
+<td>Running</td>
+<td>Kubernetes Worker Node</td>
+<td><code>192.168.10.11</code></td>
+<td>vnet6</td>
+<td>2 vCPU, 8GB RAM</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>worker02</strong></td>
+<td>Running</td>
+<td>Kubernetes Worker Node</td>
+<td><code>192.168.10.12</code></td>
+<td>vnet7</td>
+<td>2 vCPU, 8GB RAM</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>worker03</strong></td>
+<td>Running</td>
+<td>Kubernetes Worker Node</td>
+<td><code>192.168.10.13</code></td>
+<td>vnet9</td>
+<td>2 vCPU, 8GB RAM</td>
+</tr>
+</tbody>
+</table>
+<h3 id="vm-connectivity">VM Connectivity<a class="headerlink" href="#vm-connectivity" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Internal Communication</strong>: All VMs connected via <code>virbr1</code> bridge (192.168.10.0/24)</li>
+<li><strong>External Access</strong>: NAT through host machine</li>
+<li><strong>Service Discovery</strong>: Internal DNS provided by bastion01</li>
+<li><strong>Remote Access</strong>: Tailscale subnet routing for external connectivity</li>
+</ul>
+<hr />
+<h2 id="network-architecture">Network Architecture<a class="headerlink" href="#network-architecture" title="Permanent link">&para;</a></h2>
+<h3 id="nat-based-networking">NAT-based Networking<a class="headerlink" href="#nat-based-networking" title="Permanent link">&para;</a></h3>
+<p>The lab uses NAT (Network Address Translation) mode for VM connectivity, providing isolation and security:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Private Subnet</strong></td>
+<td>VMs operate on <code>192.168.10.0/24</code> and <code>192.168.11.0/24</code></td>
+<td>Network isolation from external networks</td>
+</tr>
+<tr>
+<td><strong>Internet Access</strong></td>
+<td>Outbound connectivity via host</td>
+<td>VMs can reach external services</td>
+</tr>
+<tr>
+<td><strong>External Isolation</strong></td>
+<td>No direct inbound access from LAN</td>
+<td>Enhanced security posture</td>
+</tr>
+</tbody>
+</table>
+<h3 id="access-patterns">Access Patterns<a class="headerlink" href="#access-patterns" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Direction    | Source        | Destination   | Status
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>-------------|---------------|---------------|--------
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Outbound     | VMs           | Internet      | ✅ Allowed
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Internal     | VM ↔ VM       | Internal IPs  | ✅ Allowed
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>Host Access  | VMs ↔ Host    | Host Bridge   | ✅ Allowed
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Inbound      | LAN → VMs     | VM IPs        | ❌ Blocked (NAT)
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>External access to VMs requires either port forwarding or Tailscale subnet routing.</p>
+</div>
+<h2 id="infrastructure-services">Infrastructure Services<a class="headerlink" href="#infrastructure-services" title="Permanent link">&para;</a></h2>
+<h3 id="bastion-host-bastion01">Bastion Host (bastion01)<a class="headerlink" href="#bastion-host-bastion01" title="Permanent link">&para;</a></h3>
+<p>The bastion host provides critical infrastructure services for the lab environment:</p>
+<h4 id="internal-dns-server-bind9">Internal DNS Server (BIND9)<a class="headerlink" href="#internal-dns-server-bind9" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Configuration</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>DNS Software</strong></td>
+<td>BIND9</td>
+<td>Authoritative DNS for internal zone</td>
+</tr>
+<tr>
+<td><strong>Zone</strong></td>
+<td><code>*.lab.riupie.com</code></td>
+<td>Internal service discovery</td>
+</tr>
+<tr>
+<td><strong>Forwarders</strong></td>
+<td>1.1.1.1, 8.8.8.8</td>
+<td>External DNS resolution</td>
+</tr>
+<tr>
+<td><strong>Clients</strong></td>
+<td>All lab VMs</td>
+<td>Centralized name resolution</td>
+</tr>
+</tbody>
+</table>
+<h4 id="tailscale-integration">Tailscale Integration<a class="headerlink" href="#tailscale-integration" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Configuration</th>
+<th>Benefit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Subnet Router</strong></td>
+<td>Advertises <code>192.168.10.0/24</code></td>
+<td>Remote access to entire lab</td>
+</tr>
+<tr>
+<td><strong>Exit Node</strong></td>
+<td>Optional internet routing</td>
+<td>Secure external connectivity</td>
+</tr>
+<tr>
+<td><strong>Authentication</strong></td>
+<td>Tailnet integration</td>
+<td>SSO-based access control</td>
+</tr>
+<tr>
+<td><strong>Encryption</strong></td>
+<td>WireGuard protocol</td>
+<td>Zero-trust network security</td>
+</tr>
+</tbody>
+</table>
+<h2 id="hardware-requirements">Hardware Requirements<a class="headerlink" href="#hardware-requirements" title="Permanent link">&para;</a></h2>
+<h3 id="production-host-specifications">Production Host Specifications<a class="headerlink" href="#production-host-specifications" title="Permanent link">&para;</a></h3>
+<p>The lab runs on a dedicated bare-metal server with the following specifications:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Specification</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CPU</strong></td>
+<td>AMD Ryzen 5 3600 (12 cores @ 3.6GHz)</td>
+<td>VM compute resources</td>
+</tr>
+<tr>
+<td><strong>Memory</strong></td>
+<td>64GB DDR4</td>
+<td>VM memory allocation</td>
+</tr>
+<tr>
+<td><strong>Storage</strong></td>
+<td>SSD storage pool</td>
+<td>VM disk images and data</td>
+</tr>
+<tr>
+<td><strong>Network</strong></td>
+<td>1Gbps Ethernet</td>
+<td>Internet and LAN connectivity</td>
+</tr>
+<tr>
+<td><strong>OS</strong></td>
+<td>Debian GNU/Linux 12 (bookworm)</td>
+<td>KVM hypervisor host</td>
+</tr>
+</tbody>
+</table>
+<h3 id="host-system-details">Host System Details<a class="headerlink" href="#host-system-details" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># System Information</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>OS:<span class="w"> </span>Debian<span class="w"> </span>GNU/Linux<span class="w"> </span><span class="m">12</span><span class="w"> </span><span class="o">(</span>bookworm<span class="o">)</span><span class="w"> </span>x86_64
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Kernel:<span class="w"> </span><span class="m">6</span>.1.0-28-amd64
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>CPU:<span class="w"> </span>AMD<span class="w"> </span>Ryzen<span class="w"> </span><span class="m">5</span><span class="w"> </span><span class="m">3600</span><span class="w"> </span><span class="o">(</span><span class="m">12</span><span class="o">)</span><span class="w"> </span>@<span class="w"> </span><span class="m">3</span>.600GHz
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>Memory:<span class="w"> </span>64GB<span class="w"> </span>DDR4
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>Virtualization:<span class="w"> </span>KVM<span class="w"> </span>with<span class="w"> </span>libvirt
+</code></pre></div>
+<h3 id="minimum-requirements">Minimum Requirements<a class="headerlink" href="#minimum-requirements" title="Permanent link">&para;</a></h3>
+<p>For testing or development environments, you can use alternative hardware:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Minimum</th>
+<th>Recommended</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CPU</strong></td>
+<td>4 cores</td>
+<td>8+ cores</td>
+<td>Must support virtualization (VT-x/AMD-V)</td>
+</tr>
+<tr>
+<td><strong>Memory</strong></td>
+<td>16GB</td>
+<td>32GB+</td>
+<td>4GB per VM + host overhead</td>
+</tr>
+<tr>
+<td><strong>Storage</strong></td>
+<td>100GB</td>
+<td>500GB+</td>
+<td>SSD recommended for performance</td>
+</tr>
+<tr>
+<td><strong>Network</strong></td>
+<td>1Gbps</td>
+<td>1Gbps+</td>
+<td>For VM and container networking</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Laptop or desktop systems can be used as long as they meet the minimum requirements and support hardware virtualization.</p>
+</div>
+
+
+
+
+
+
+
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 9, 2025 14:14:33 UTC">August 9, 2025</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.annotate", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.instant", "navigation.tabs", "navigation.tabs.sticky"], "search": "../../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.50899def.min.js"></script>
+      
+    
+  </body>
+</html>
