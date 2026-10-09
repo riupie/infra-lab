@@ -3,9 +3,3 @@ resource "libvirt_network" "net_lab" {
   addresses = ["192.168.10.0/24"]
   autostart = true
 }
-
-resource "libvirt_network" "net_ceph" {
-  name = "ceph-lab"
-  addresses = ["192.168.11.0/24"]
-  autostart = true
-}
