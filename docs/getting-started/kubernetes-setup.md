@@ -1,7 +1,7 @@
 # Kubernetes Setup
 ## Overview
 
-This guide covers the installation and configuration of a Kubernetes cluster using k0s, a lightweight and CNCF-certified Kubernetes distribution. The setup uses k0sctl for cluster lifecycle management and provides a production-ready environment.
+This guide covers the installation and configuration of a Kubernetes cluster using k0s, a lightweight and CNCF-certified Kubernetes distribution. The setup uses k0sctl for cluster lifecycle management and provides a minimal lab environment: one control plane node and one worker node.
 
 ## Prerequisites
 
@@ -17,14 +17,13 @@ Before proceeding, ensure you have completed:
 virsh list
 
 # Test connectivity to all nodes
-ping -c 2 192.168.10.9   # bastion01
+ping -c 2 192.168.10.9   # bastion (general01)
 ping -c 2 192.168.10.10  # master01
 ping -c 2 192.168.10.11  # worker01
-ping -c 2 192.168.10.12  # worker02
-ping -c 2 192.168.10.13  # worker03
 
-# Test SSH access
-ssh cloud@192.168.10.10 "hostname && uptime"
+# Test SSH access (user must match the `user` fields in k0sctl.yaml)
+ssh <user>@192.168.10.10 "hostname && uptime"
+ssh <user>@192.168.10.11 "hostname && uptime"
 ```
 
 ## k0sctl Installation (from Bastion)
@@ -34,17 +33,22 @@ ssh cloud@192.168.10.10 "hostname && uptime"
 k0sctl is the command-line tool for managing k0s Kubernetes clusters.
 
 ```bash
-# Method 1: Using the install script (recommended)
-curl -sSLf https://get.k0s.sh | sudo sh
+# Method 1: Download the release binary and verify its checksum (recommended)
+K0SCTL_VERSION=v0.33.1
+mkdir -p /tmp/k0sctl && cd /tmp/k0sctl
+curl -fsSLO https://github.com/k0sproject/k0sctl/releases/download/${K0SCTL_VERSION}/k0sctl-linux-amd64
+curl -fsSLO https://github.com/k0sproject/k0sctl/releases/download/${K0SCTL_VERSION}/checksums.txt
+sha256sum --check --ignore-missing checksums.txt
+sudo install -m 0755 k0sctl-linux-amd64 /usr/local/bin/k0sctl
 
-# Method 2: Manual installation
-wget https://github.com/k0sproject/k0sctl/releases/download/v0.15.5/k0sctl-linux-x64
-chmod +x k0sctl-linux-x64
-sudo mv k0sctl-linux-x64 /usr/local/bin/k0sctl
+# Method 2: Using Go (requires a Go toolchain)
+go install github.com/k0sproject/k0sctl@${K0SCTL_VERSION}
 
 # Verify installation
 k0sctl version
 ```
+
+> **Note:** `https://get.k0s.sh` installs the `k0s` binary, not `k0sctl`. k0sctl only needs to be installed on the bastion; k0s itself is deployed to the nodes by `k0sctl apply`.
 
 ## Cluster Configuration
 
@@ -66,8 +70,10 @@ The k0sctl configuration defines:
 |-----------|------|------------|------|
 | **Control Plane** | master01 | 192.168.10.10 | Controller |
 | **Worker Node** | worker01 | 192.168.10.11 | Worker |
-| **Worker Node** | worker02 | 192.168.10.12 | Worker |
-| **Worker Node** | worker03 | 192.168.10.13 | Worker |
+
+The cluster uses Calico as CNI, kube-proxy in IPVS mode (`strictARP: true`) and installs the MetalLB Helm chart through the k0s Helm extension. The controller runs only the control plane, so it does not appear in `kubectl get nodes`.
+
+> **Note:** `k0s/k0sctl.yaml` connects as user `cloud`, while the Terraform VM modules create the admin user `debian`. Set the `user` fields in `k0sctl.yaml` to the account that exists on your VMs and that your SSH key is authorized for.
 
 ## Cluster Deployment
 
@@ -88,7 +94,7 @@ The deployment performs the following steps:
 1. **Connectivity Check**: Validates SSH access to all nodes
 2. **System Preparation**: Installs k0s binary on all nodes
 3. **Control Plane Init**: Initializes the Kubernetes control plane
-4. **Worker Join**: Joins worker nodes to the cluster
+4. **Worker Join**: Joins the worker node to the cluster
 5. **Network Setup**: Configures Calico CNI
 6. **Health Check**: Verifies cluster functionality
 
@@ -114,11 +120,8 @@ kubectl cluster-info
 kubectl get nodes
 
 # Expected output:
-# NAME       STATUS   ROLES                  AGE   VERSION
-# master01   Ready    control-plane,worker   5m    v1.33.1+k0s
-# worker01   Ready    worker                 4m    v1.33.1+k0s
-# worker02   Ready    worker                 4m    v1.33.1+k0s
-# worker03   Ready    worker                 4m    v1.33.1+k0s
+# NAME       STATUS   ROLES    AGE   VERSION
+# worker01   Ready    <none>   4m    v1.36.4+k0s
 
 # Check node details
 kubectl get nodes -o wide
@@ -136,6 +139,9 @@ kubectl get pods -n kube-system
 # - konnectivity-* (API server connectivity)
 # - metrics-server-* (resource metrics)
 
+# Check MetalLB (installed by the k0s Helm extension)
+kubectl get pods -n metallb
+
 # Check pod status across all namespaces
 kubectl get pods --all-namespaces
 ```
@@ -144,5 +150,6 @@ kubectl get pods --all-namespaces
 
 After successful Kubernetes setup:
 
-1. **[Storage Integration](../storage/integrations/kubernetes.md)** - Configure Ceph storage
+1. **MetalLB** - Define an `IPAddressPool` and `L2Advertisement` for LoadBalancer services (only the chart is installed)
 2. **CI/CD** - Set up GitOps with ArgoCD
+3. *(Optional)* **[Storage Integration](../storage/integrations/kubernetes.md)** - Only if you deploy the Ceph nodes, which the current single-worker setup does not use
