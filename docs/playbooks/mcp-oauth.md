@@ -1,4 +1,4 @@
-# Protect MCP servers with Keycloak OAuth (agentgateway + DCR)
+# Secure MCP servers with Keycloak OAuth
 
 This playbook puts JWT authentication and group-based authorization in front of MCP servers behind agentgateway, and lets MCP clients self-register in Keycloak via Dynamic Client Registration (DCR) instead of pre-provisioned clients.
 
@@ -8,11 +8,11 @@ Stack: agentgateway chart `v1.6.0`, Keycloak 26.x, Flux · Target: realm `mcp`, 
 
 ## Prerequisites
 
-- [ ] Keycloak reachable at `https://keycloak.lab.riupie.com` (runs on bastion01 from `/opt/keycloak` with Docker Compose, exposed through the gateway), realm `mcp` exists. Check the version in the console (Help → Server info); the UI paths below are from Keycloak 26.x.
+- [ ] Keycloak reachable at `https://keycloak.lab.riupie.com` (runs on general01 from `/opt/keycloak` with Docker Compose, exposed through the gateway), realm `mcp` exists. Check the version in the console (Help → Server info); the UI paths below are from Keycloak 26.x.
 - [ ] Gateway `gateway-ai` (ns `gateway-system`) serving host `gateway.lab.riupie.com`: `kubectl --context lab-cluster -n gateway-system get gateway gateway-ai`
 - [ ] Upstream MCP server deployed, e.g. `mcp-website-fetcher` (ns `mcp-server`), path `/mcp/web-fetcher`
 - [ ] Access to the `riupie/gitops-fluxcd` repo: manifests live under `apps/development/mcp-website-fetcher/` and are deployed by Flux; this page documents the Keycloak and gateway setup behind them
-- [ ] On the Fedora host: `*.lab.riupie.com` resolves (see [BIND9 step 8](../bind9/deployment.md#8-optional-resolve-the-lab-zone-from-the-fedora-host)), and `curl`/`jq` are installed (`sudo dnf install -y jq`)
+- [ ] On the Fedora host: `*.lab.riupie.com` resolves (see [Dynamic DNS step 8](dynamic-dns.md#8-optional-resolve-the-lab-zone-from-the-fedora-host)), and `curl`/`jq` are installed (`sudo dnf install -y jq`)
 
 ## Steps
 

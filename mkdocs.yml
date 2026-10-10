@@ -26,10 +26,8 @@ nav:
       - Infrastructure Deployment: docs/getting-started/infrastructure-deployment.md
       - Kubernetes Setup: docs/getting-started/kubernetes-setup.md
   - Playbooks:
-    - BIND9 DNS:
-      - Deployment: docs/playbooks/bind9/deployment.md
-    - AI Gateway:
-      - Keycloak OAuth for MCP: docs/playbooks/ai-gateway/keycloak-mcp-auth.md
+    - Set Up Dynamic DNS: docs/playbooks/dynamic-dns.md
+    - Secure MCP Servers with OAuth: docs/playbooks/mcp-oauth.md
 
 theme:
   name: material
