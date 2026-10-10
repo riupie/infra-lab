@@ -1,6 +1,1 @@
-mkdocs
-mkdocs-git-revision-date-localized-plugin
-mkdocs-literate-nav
-mkdocs-material
-mkdocs-same-dir
-pymdown-extensions
+zensical==0.0.69

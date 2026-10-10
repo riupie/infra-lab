@@ -21,9 +21,9 @@ Every step of the process—from planning and designing the cluster architecture
 ├── k0s
 │   └── k0sctl.yaml
 ├── LICENSE
-├── mkdocs.yml
 ├── README.md
-└── requirements.txt
+├── requirements.txt
+└── zensical.toml
 ```
 
 `.git-crypt`: contains gpg files of collaborators who can open encrypted git-crypt file.
@@ -35,7 +35,7 @@ Every step of the process—from planning and designing the cluster architecture
 The following picture shows the high level components of opensource solutions used so far in the cluster, which installation process has been documented and its deployment has been automated with Open Tofu:
 
 <p align="center">
-  <img src="docs/assets/imgs/tech-stack.svg" width="500"/>
+  <img src="https://riupie.com/infra-lab/assets/imgs/tech-stack.svg" width="500"/>
 </p>
 
 <div class="d-flex">

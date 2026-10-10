@@ -48,7 +48,7 @@ infra-lab/
 │       ├── tf-state
 │       └── vm
 ├── k0s/
-└── mkdocs.yml
+└── zensical.toml
 ```
 
 !!! warning "Remove the author's state before the first run"

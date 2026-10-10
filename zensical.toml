@@ -1,0 +1,83 @@
+[project]
+site_name = "infra-lab"
+site_author = "riupie maintainers"
+site_url = "https://riupie.com/infra-lab/"
+repo_name = "riupie/infra-lab"
+repo_url = "https://github.com/riupie/infra-lab"
+docs_dir = "docs"
+# addons/bind9 is pulled into the DNS playbook via snippets
+watch = ["addons/bind9"]
+extra_css = ["stylesheets/extra.css"]
+
+nav = [
+  { "Getting Started" = [
+    "index.md",
+    { "Lab Architecture" = "getting-started/lab-architecture.md" },
+    { "Quickstart" = [
+      { "Prerequisites" = "getting-started/prerequisites.md" },
+      { "Infrastructure Deployment" = "getting-started/infrastructure-deployment.md" },
+      { "Kubernetes Setup" = "getting-started/kubernetes-setup.md" },
+    ] },
+  ] },
+  { "Playbooks" = [
+    { "Set Up Dynamic DNS" = "playbooks/dynamic-dns.md" },
+    { "Secure MCP Servers with OAuth" = "playbooks/mcp-oauth.md" },
+  ] },
+]
+
+# obsolete, kept in git for reference
+[project.plugins.exclude]
+glob = ["playbooks/storage/*"]
+
+[project.theme]
+features = [
+  "content.code.annotate",
+  "content.code.copy",
+  "navigation.top",
+  "navigation.tracking",
+  "navigation.indexes",
+  "navigation.instant",
+  "navigation.tabs",
+  "navigation.tabs.sticky",
+]
+
+[project.markdown_extensions.meta]
+[project.markdown_extensions.tables]
+[project.markdown_extensions.toc]
+permalink = true
+[project.markdown_extensions.abbr]
+[project.markdown_extensions.extra]
+[project.markdown_extensions.admonition]
+[project.markdown_extensions.smarty]
+[project.markdown_extensions.sane_lists]
+[project.markdown_extensions.attr_list]
+[project.markdown_extensions.def_list]
+[project.markdown_extensions.footnotes]
+[project.markdown_extensions.md_in_html]
+[project.markdown_extensions.pymdownx.arithmatex]
+generic = true
+[project.markdown_extensions.pymdownx.betterem]
+smart_enable = "all"
+[project.markdown_extensions.pymdownx.caret]
+[project.markdown_extensions.pymdownx.details]
+[project.markdown_extensions.pymdownx.emoji]
+emoji_index = "zensical.extensions.emoji.twemoji"
+emoji_generator = "zensical.extensions.emoji.to_svg"
+[project.markdown_extensions.pymdownx.highlight]
+use_pygments = true
+anchor_linenums = true
+[project.markdown_extensions.pymdownx.inlinehilite]
+[project.markdown_extensions.pymdownx.keys]
+[project.markdown_extensions.pymdownx.mark]
+[project.markdown_extensions.pymdownx.smartsymbols]
+[project.markdown_extensions.pymdownx.snippets]
+check_paths = true
+[project.markdown_extensions.pymdownx.superfences]
+custom_fences = [
+  { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" },
+]
+[project.markdown_extensions.pymdownx.tabbed]
+alternate_style = true
+[project.markdown_extensions.pymdownx.tilde]
+[project.markdown_extensions.pymdownx.tasklist]
+custom_checkbox = true
