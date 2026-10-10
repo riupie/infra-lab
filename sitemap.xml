@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://riupie.com/infra-lab/</loc>
+         <lastmod>2026-10-10</lastmod>
+    </url>
+    <url>
+         <loc>https://riupie.com/infra-lab/docs/getting-started/infrastructure-deployment/</loc>
+         <lastmod>2026-10-10</lastmod>
+    </url>
+    <url>
+         <loc>https://riupie.com/infra-lab/docs/getting-started/kubernetes-setup/</loc>
+         <lastmod>2026-10-10</lastmod>
+    </url>
+    <url>
+         <loc>https://riupie.com/infra-lab/docs/getting-started/lab-architecture/</loc>
+         <lastmod>2026-10-10</lastmod>
+    </url>
+    <url>
+         <loc>https://riupie.com/infra-lab/docs/getting-started/prerequisites/</loc>
+         <lastmod>2026-10-10</lastmod>
+    </url>
+    <url>
+         <loc>https://riupie.com/infra-lab/docs/playbooks/dynamic-dns/</loc>
+         <lastmod>2026-10-10</lastmod>
+    </url>
+    <url>
+         <loc>https://riupie.com/infra-lab/docs/playbooks/mcp-oauth/</loc>
+         <lastmod>2026-10-10</lastmod>
+    </url>
+</urlset>

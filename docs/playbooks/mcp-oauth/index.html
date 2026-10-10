@@ -1,0 +1,1524 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+        <meta name="author" content="riupie maintainers">
+      
+      
+        <link rel="canonical" href="https://riupie.com/infra-lab/docs/playbooks/mcp-oauth/">
+      
+      
+        <link rel="prev" href="../dynamic-dns/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Secure MCP Servers with OAuth - infra-lab</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#secure-mcp-servers-with-keycloak-oauth" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="infra-lab" class="md-header__button md-logo" aria-label="infra-lab" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            infra-lab
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Secure MCP Servers with OAuth
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/riupie/infra-lab" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    riupie/infra-lab
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../.." class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../dynamic-dns/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Playbooks
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="infra-lab" class="md-nav__button md-logo" aria-label="infra-lab" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    infra-lab
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/riupie/infra-lab" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    riupie/infra-lab
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../.." class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1" id="__nav_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/lab-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lab Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_3" id="__nav_1_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Quickstart
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/prerequisites/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prerequisites
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/infrastructure-deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Infrastructure Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/kubernetes-setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kubernetes Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Playbooks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Playbooks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dynamic-dns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Set Up Dynamic DNS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Secure MCP Servers with OAuth
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Secure MCP Servers with OAuth
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prerequisites
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Steps
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Steps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-review-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Review the model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-create-the-group-and-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Create the group and user
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-create-the-shared-scope-mcp-groups-claim" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Create the shared scope mcp (groups claim)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-create-the-per-server-scope-mcp-web-fetcher-audience" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Create the per-server scope mcp-web-fetcher (audience)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-configure-client-registration-policies-dcr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Configure client registration policies (DCR)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-check-realm-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Check realm settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-configure-agentgateway-kubernetes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Configure agentgateway / Kubernetes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verify
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Verify">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-keycloak-discovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Keycloak discovery
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-gateway-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Gateway behaviour
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-dcr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. DCR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-end-to-end" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. End to end
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rollback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rollback
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prerequisites
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Steps
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Steps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-review-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Review the model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-create-the-group-and-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Create the group and user
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-create-the-shared-scope-mcp-groups-claim" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Create the shared scope mcp (groups claim)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-create-the-per-server-scope-mcp-web-fetcher-audience" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Create the per-server scope mcp-web-fetcher (audience)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-configure-client-registration-policies-dcr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Configure client registration policies (DCR)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-check-realm-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Check realm settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-configure-agentgateway-kubernetes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Configure agentgateway / Kubernetes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verify
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Verify">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-keycloak-discovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Keycloak discovery
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-gateway-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Gateway behaviour
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-dcr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. DCR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-end-to-end" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. End to end
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rollback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rollback
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="secure-mcp-servers-with-keycloak-oauth">Secure MCP servers with Keycloak OAuth<a class="headerlink" href="#secure-mcp-servers-with-keycloak-oauth" title="Permanent link">&para;</a></h1>
+<p>This playbook puts JWT authentication and group-based authorization in front of MCP servers behind agentgateway, and lets MCP clients self-register in Keycloak via Dynamic Client Registration (DCR) instead of pre-provisioned clients.</p>
+<p>Use it when exposing a new MCP server through <code>gateway-ai</code>, or when rebuilding the Keycloak realm/scopes. It is not needed for MCP servers that are cluster-internal only.</p>
+<p>Stack: agentgateway chart <code>v1.6.0</code>, Keycloak 26.x, Flux · Target: realm <code>mcp</code>, gateway <code>gateway-ai</code> (ns <code>gateway-system</code>), kube context <code>lab-cluster</code> · Env: lab</p>
+<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Keycloak reachable at <code>https://keycloak.lab.riupie.com</code> (runs on general01 from <code>/opt/keycloak</code> with Docker Compose, exposed through the gateway), realm <code>mcp</code> exists. Check the version in the console (Help → Server info); the UI paths below are from Keycloak 26.x.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Gateway <code>gateway-ai</code> (ns <code>gateway-system</code>) serving host <code>gateway.lab.riupie.com</code>: <code>kubectl --context lab-cluster -n gateway-system get gateway gateway-ai</code></li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Upstream MCP server deployed, e.g. <code>mcp-website-fetcher</code> (ns <code>mcp-server</code>), path <code>/mcp/web-fetcher</code></li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Access to the <code>riupie/gitops-fluxcd</code> repo: manifests live under <code>apps/development/mcp-website-fetcher/</code> and are deployed by Flux; this page documents the Keycloak and gateway setup behind them</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> On the Fedora host: <code>*.lab.riupie.com</code> resolves (see <a href="../dynamic-dns/#8-resolve-the-lab-zone-from-the-fedora-host">Dynamic DNS step 8</a>), and <code>curl</code>/<code>jq</code> are installed (<code>sudo dnf install -y jq</code>)</li>
+</ul>
+<h2 id="steps">Steps<a class="headerlink" href="#steps" title="Permanent link">&para;</a></h2>
+<h3 id="1-review-the-model">1. Review the model<a class="headerlink" href="#1-review-the-model" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant C as MCP client
+    participant G as agentgateway&lt;br/&gt;gateway.lab.riupie.com
+    participant K as Keycloak&lt;br/&gt;keycloak.lab.riupie.com, realm mcp
+    participant M as MCP server&lt;br/&gt;web-fetcher
+
+    C-&gt;&gt;G: POST /mcp/web-fetcher (no token)
+    G--&gt;&gt;C: 401 + WWW-Authenticate: resource_metadata=...
+    C-&gt;&gt;G: GET /.well-known/oauth-protected-resource/mcp/web-fetcher
+    G--&gt;&gt;C: Protected resource metadata (resource, scopes_supported)
+    C-&gt;&gt;G: GET /.well-known/oauth-authorization-server/mcp/web-fetcher
+    G--&gt;&gt;C: AS metadata (Keycloak-adapted, registration_endpoint on the gateway)
+    C-&gt;&gt;G: POST .../client-registration (DCR)
+    G-&gt;&gt;K: Forward to /realms/mcp/clients-registrations/openid-connect
+    K--&gt;&gt;G: client_id (public client)
+    G--&gt;&gt;C: client_id
+    C-&gt;&gt;K: Authorization code + PKCE, scope "openid mcp mcp-web-fetcher"
+    Note over C,K: User logs in, must be in group "users"
+    K--&gt;&gt;C: Access token (iss, aud, groups)
+    C-&gt;&gt;G: POST /mcp/web-fetcher + Bearer token
+    Note over G: Verify iss, aud, signature (JWKS)&lt;br/&gt;authorize: jwt.groups contains "users"
+    G-&gt;&gt;M: Forward MCP request
+    M--&gt;&gt;G: MCP response
+    G--&gt;&gt;C: MCP response</code></pre>
+<p>Token contract the policy depends on:</p>
+<table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Value</th>
+<th>Produced by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>iss</code></td>
+<td><code>https://keycloak.lab.riupie.com/realms/mcp</code></td>
+<td>realm (frontend URL)</td>
+</tr>
+<tr>
+<td><code>aud</code></td>
+<td><code>https://gateway.lab.riupie.com/mcp/web-fetcher</code></td>
+<td>audience mapper in scope <code>mcp-web-fetcher</code></td>
+</tr>
+<tr>
+<td><code>groups</code></td>
+<td><code>["users"]</code></td>
+<td>group-membership mapper in scope <code>mcp</code></td>
+</tr>
+</tbody>
+</table>
+<p>Design: <strong>one audience per MCP server</strong>, so a token for server A is rejected by server B. <code>mcp</code> is a <em>Default</em> scope (every DCR client gets <code>groups</code>); <code>mcp-&lt;server&gt;</code> scopes are <em>Optional</em> (a client requests only the scope the route advertises).</p>
+<h3 id="2-create-the-group-and-user">2. Create the group and user<a class="headerlink" href="#2-create-the-group-and-user" title="Permanent link">&para;</a></h3>
+<p><em>Keycloak console, realm <code>mcp</code>:</em></p>
+<ol>
+<li>Groups → <strong>Create group</strong> → <code>users</code>.</li>
+<li>Users → <strong>Add user</strong>: username, email, first/last name → Create.</li>
+<li>User → <strong>Credentials</strong> → Set password (Temporary OFF).</li>
+<li>User → <strong>Groups</strong> → Join group → <code>users</code>.</li>
+</ol>
+<h3 id="3-create-the-shared-scope-mcp-groups-claim">3. Create the shared scope <code>mcp</code> (groups claim)<a class="headerlink" href="#3-create-the-shared-scope-mcp-groups-claim" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Client scopes → <strong>Create client scope</strong><ul>
+<li>Name <code>mcp</code>, Type <strong>Default</strong>, Protocol OpenID Connect</li>
+<li>Display on consent screen ON, <strong>Include in token scope</strong> ON, Include in OpenID Provider Metadata ON</li>
+</ul>
+</li>
+<li><code>mcp</code> → Mappers → <strong>Configure a new mapper</strong> → <strong>Group Membership</strong><ul>
+<li>Name <code>groups</code>, Token claim name <code>groups</code></li>
+<li><strong>Full group path OFF</strong> (the claim must be <code>users</code>, not <code>/users</code>)</li>
+<li>Add to ID token OFF, access token ON, introspection ON, userinfo ON</li>
+</ul>
+</li>
+</ol>
+<h3 id="4-create-the-per-server-scope-mcp-web-fetcher-audience">4. Create the per-server scope <code>mcp-web-fetcher</code> (audience)<a class="headerlink" href="#4-create-the-per-server-scope-mcp-web-fetcher-audience" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Client scopes → <strong>Create client scope</strong><ul>
+<li>Name <code>mcp-web-fetcher</code>, Type <strong>Optional</strong>, Protocol OpenID Connect</li>
+<li><strong>Include in token scope</strong> ON, Include in OpenID Provider Metadata ON</li>
+</ul>
+</li>
+<li>Mappers → <strong>Configure a new mapper</strong> → <strong>Audience</strong><ul>
+<li>Name <code>web-fetcher-audience</code></li>
+<li>Included Client Audience: <em>(empty)</em></li>
+<li><strong>Included Custom Audience</strong>: <code>https://gateway.lab.riupie.com/mcp/web-fetcher</code></li>
+<li>Add to access token ON, introspection ON, ID token OFF</li>
+</ul>
+</li>
+</ol>
+<p>Custom Audience is a free string. &ldquo;Included Client Audience&rdquo; would require a Keycloak client with that exact clientId.</p>
+<div class="admonition tip">
+<p class="admonition-title">Adding another MCP server</p>
+<p>For a server <code>foo</code>, repeat this step with scope <code>mcp-foo</code> and audience <code>https://gateway.lab.riupie.com/mcp/foo</code>, then add <code>mcp-foo</code> to Allowed Client Scopes (step 5).</p>
+</div>
+<h3 id="5-configure-client-registration-policies-dcr">5. Configure client registration policies (DCR)<a class="headerlink" href="#5-configure-client-registration-policies-dcr" title="Permanent link">&para;</a></h3>
+<p>Clients → <strong>Client registration</strong> tab → <strong>Anonymous access policies</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Policy</th>
+<th>Setting</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Allowed Client Scopes</strong></td>
+<td>Allowed scopes: <code>openid</code>, <code>email</code>, <code>mcp-web-fetcher</code> (one per server). <em>Allow Default Scopes</em> ON auto-allows <code>mcp</code>.</td>
+</tr>
+<tr>
+<td><strong>Trusted Hosts</strong></td>
+<td><strong>Host Sending Registration Request Must Match: OFF</strong> (IP check disabled). <strong>Client URIs Must Match: ON</strong>. Trusted Hosts: <code>localhost</code>, <code>127.0.0.1</code> (add <code>*.lab.riupie.com</code> etc. for web clients).</td>
+</tr>
+<tr>
+<td><strong>Full Scope Disabled</strong></td>
+<td>Keep (strips role mappings from new clients).</td>
+</tr>
+<tr>
+<td><strong>Max Clients Limit</strong></td>
+<td>Lower from the default (e.g. 50) to bound anonymous registrations.</td>
+</tr>
+</tbody>
+</table>
+<p>Why the source-IP check is off: Keycloak is behind agentgateway, so it sees the gateway/pod address (or the real client IP via <code>X-Forwarded-For</code>, depending on <code>--proxy-headers</code>), never a stable, knowable client address. With the IP check off, registration is still constrained by <em>Client URIs Must Match</em> (redirect hosts limited to the trusted list), Allowed Client Scopes, Full Scope Disabled and Max Clients Limit.</p>
+<p>If you re-enable the IP check and get 403, the rejected host is in the Keycloak server log; add the gateway address (<code>192.168.10.100</code> LB IP, or the node/pod IP Keycloak sees).</p>
+<h3 id="6-check-realm-settings">6. Check realm settings<a class="headerlink" href="#6-check-realm-settings" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Realm settings → General → <strong>Frontend URL</strong>: leave empty if the public hostname is already derived correctly. The discovery <code>issuer</code> must equal <code>https://keycloak.lab.riupie.com/realms/mcp</code> exactly (checked in <a href="#1-keycloak-discovery">Verify 1</a>).</li>
+<li>Do <strong>not</strong> attach <code>microprofile-jwt</code> to DCR clients: it writes realm roles into a <code>groups</code> claim and collides with the group mapper.</li>
+</ul>
+<h3 id="7-configure-agentgateway-kubernetes">7. Configure agentgateway / Kubernetes<a class="headerlink" href="#7-configure-agentgateway-kubernetes" title="Permanent link">&para;</a></h3>
+<p>Files (in <code>gitops-fluxcd</code>): <code>apps/development/mcp-website-fetcher/</code></p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>service.yaml</code></td>
+<td><code>appProtocol: agentgateway.dev/mcp</code></td>
+</tr>
+<tr>
+<td><code>backend.yaml</code></td>
+<td><code>AgentgatewayBackend</code> with an MCP target</td>
+</tr>
+<tr>
+<td><code>httproute.yaml</code></td>
+<td>Routes <code>/mcp/web-fetcher</code> <strong>and both</strong> <code>/.well-known/oauth-*/mcp/web-fetcher</code> paths to the backend</td>
+</tr>
+<tr>
+<td><code>policy.yaml</code></td>
+<td><code>AgentgatewayPolicy</code>: JWT validation, MCP resource metadata, tool authZ</td>
+</tr>
+</tbody>
+</table>
+<p>Key <code>policy.yaml</code> fields:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">traffic</span><span class="p">:</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">jwtAuthentication</span><span class="p">:</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Strict</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nt">providers</span><span class="p">:</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">issuer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://keycloak.lab.riupie.com/realms/mcp</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">        </span><span class="nt">audiences</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">https</span><span class="p p-Indicator">:</span><span class="nv">//gateway.lab.riupie.com/mcp/web-fetcher</span><span class="p p-Indicator">]</span><span class="w">   </span><span class="c1"># must equal the audience mapper value</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">        </span><span class="nt">jwks</span><span class="p">:</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">          </span><span class="nt">remote</span><span class="p">:</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">            </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://keycloak.lab.riupie.com/realms/mcp/protocol/openid-connect/certs</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="nt">mcp</span><span class="p">:</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">      </span><span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Keycloak</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">      </span><span class="nt">resourceMetadata</span><span class="p">:</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">        </span><span class="nt">resource</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://gateway.lab.riupie.com/mcp/web-fetcher</span><span class="w">     </span><span class="c1"># canonical URL of this MCP server</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">        </span><span class="nt">scopesSupported</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">openid</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">mcp</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">mcp-web-fetcher</span><span class="p p-Indicator">]</span><span class="w">              </span><span class="c1"># what clients will request</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">        </span><span class="nt">bearerMethodsSupported</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">header</span><span class="p p-Indicator">]</span><span class="w">                             </span><span class="c1"># no tokens in body/query</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="nt">backend</span><span class="p">:</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">  </span><span class="nt">mcp</span><span class="p">:</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">    </span><span class="nt">authorization</span><span class="p">:</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">      </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Allow</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">      </span><span class="nt">policy</span><span class="p">:</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">        </span><span class="nt">matchExpressions</span><span class="p">:</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">'has(jwt.groups)</span><span class="nv"> </span><span class="s">&amp;&amp;</span><span class="nv"> </span><span class="s">jwt.groups.exists(group,</span><span class="nv"> </span><span class="s">group</span><span class="nv"> </span><span class="s">==</span><span class="nv"> </span><span class="s">"users")'</span>
+</code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">Consistency rules (the usual failure points)</p>
+<ul>
+<li><code>issuer</code> == discovery <code>issuer</code> == token <code>iss</code> (scheme, host, realm path; no trailing slash).</li>
+<li><code>audiences</code> == audience mapper &ldquo;Included Custom Audience&rdquo; (exact string).</li>
+<li><code>scopesSupported</code> contains the per-server scope; otherwise DCR clients never request it and get no <code>aud</code>.</li>
+<li>The HTTPRoute includes the <code>.well-known</code> paths; otherwise discovery returns <code>404 route not found</code> and DCR never starts.</li>
+<li>The gateway can reach <code>keycloak.lab.riupie.com</code> and trusts its certificate, to fetch JWKS.</li>
+</ul>
+</div>
+<p>Roll out through Flux (commit → push → reconcile):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flux<span class="w"> </span>--context<span class="w"> </span>lab-cluster<span class="w"> </span>reconcile<span class="w"> </span>kustomization<span class="w"> </span>apps<span class="w"> </span>--with-source<span class="w">   </span><span class="c1"># adjust to your Kustomization name</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>kubectl<span class="w"> </span>--context<span class="w"> </span>lab-cluster<span class="w"> </span>-n<span class="w"> </span>mcp-server<span class="w"> </span>get<span class="w"> </span>agentgatewaypolicy,httproute
+</code></pre></div>
+<h2 id="verify">Verify<a class="headerlink" href="#verify" title="Permanent link">&para;</a></h2>
+<p>Run these on the Fedora host.</p>
+<h3 id="1-keycloak-discovery">1. Keycloak discovery<a class="headerlink" href="#1-keycloak-discovery" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>https://keycloak.lab.riupie.com/realms/mcp/.well-known/openid-configuration<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'{issuer, jwks_uri, registration_endpoint, code_challenge_methods_supported, scopes_supported}'</span>
+</code></pre></div>
+<p>Expected: <code>issuer</code> is exactly <code>https://keycloak.lab.riupie.com/realms/mcp</code>, and <code>scopes_supported</code> lists <code>mcp</code> and <code>mcp-web-fetcher</code>.</p>
+<h3 id="2-gateway-behaviour">2. Gateway behaviour<a class="headerlink" href="#2-gateway-behaviour" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># unauthenticated: 401 + WWW-Authenticate with resource_metadata</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>curl<span class="w"> </span>-si<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>https://gateway.lab.riupie.com/mcp/web-fetcher<span class="w"> </span><span class="p">|</span><span class="w"> </span>head
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1"># protected-resource metadata</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>curl<span class="w"> </span>-s<span class="w"> </span>https://gateway.lab.riupie.com/.well-known/oauth-protected-resource/mcp/web-fetcher<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="c1"># authorization-server metadata: registration_endpoint points at the gateway's .../client-registration</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>curl<span class="w"> </span>-s<span class="w"> </span>https://gateway.lab.riupie.com/.well-known/oauth-authorization-server/mcp/web-fetcher<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq
+</code></pre></div>
+<h3 id="3-dcr">3. DCR<a class="headerlink" href="#3-dcr" title="Permanent link">&para;</a></h3>
+<p>This creates a client in Keycloak; delete it afterwards (see <a href="#rollback">Rollback</a>).</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>https://keycloak.lab.riupie.com/realms/mcp/clients-registrations/openid-connect<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>-H<span class="w"> </span><span class="s1">'Content-Type: application/json'</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>-d<span class="w"> </span><span class="s1">'{"client_name":"dcr-test","redirect_uris":["http://localhost:8080/callback"],</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="s1">       "token_endpoint_auth_method":"none","scope":"openid mcp mcp-web-fetcher"}'</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq
+</code></pre></div>
+<p>Expected: in the console, the new client&rsquo;s <strong>Client scopes</strong> tab shows <code>mcp</code> as Default and <code>mcp-web-fetcher</code> as Optional.</p>
+<h3 id="4-end-to-end">4. End to end<a class="headerlink" href="#4-end-to-end" title="Permanent link">&para;</a></h3>
+<p>Connect with a real client (MCP Inspector, or Claude Code: <code>claude mcp add --transport http web-fetcher https://gateway.lab.riupie.com/mcp/web-fetcher</code>) and complete the login. Then decode the access token (JWTs are base64url, hence the <code>gsub</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>jq<span class="w"> </span>-R<span class="w"> </span><span class="s1">'split(".")[1] | gsub("-";"+") | gsub("_";"/") | @base64d | fromjson'</span><span class="w"> </span><span class="o">&lt;&lt;&lt;</span><span class="s2">"</span><span class="nv">$TOKEN</span><span class="s2">"</span>
+</code></pre></div>
+<p>Expected: <code>iss</code>, <code>aud</code> and <code>groups</code> match the token contract in step 1, and <code>scope</code> contains <code>mcp mcp-web-fetcher</code>.</p>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>404 route not found</code> on <code>.well-known</code></td>
+<td>HTTPRoute change not committed/reconciled</td>
+<td>Commit, then reconcile through Flux (step 7)</td>
+</tr>
+<tr>
+<td>401 <code>JWT token required</code> after login</td>
+<td>Token has wrong <code>aud</code> (mapper value ≠ policy <code>audiences</code>) or <code>iss</code> mismatch</td>
+<td>Make <code>audiences</code> equal the audience mapper value and <code>issuer</code> equal the discovery <code>issuer</code> (step 7 consistency rules)</td>
+</tr>
+<tr>
+<td>403 / tool call denied</td>
+<td><code>groups</code> missing or not <code>users</code>: <code>mcp</code> scope not Default, mapper &ldquo;Full group path&rdquo; ON, user not in group</td>
+<td><code>mcp</code> Default, Full group path OFF, user in group <code>users</code> (steps 2–3)</td>
+</tr>
+<tr>
+<td>DCR 403</td>
+<td>Trusted Hosts (source IP or redirect host), or requested scope not in Allowed Client Scopes</td>
+<td>Adjust the DCR policies (step 5)</td>
+</tr>
+<tr>
+<td>Token has no <code>mcp-web-fetcher</code></td>
+<td>Client didn&rsquo;t request the scope</td>
+<td>Add the scope to <code>scopesSupported</code> (step 7) and Allowed Client Scopes (step 5)</td>
+</tr>
+<tr>
+<td>Gateway logs a JWKS fetch error</td>
+<td>Gateway can&rsquo;t resolve/trust <code>keycloak.lab.riupie.com</code></td>
+<td>Ensure the gateway can reach and trust the Keycloak host (step 7)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="rollback">Rollback<a class="headerlink" href="#rollback" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Gateway: <code>git revert</code> the policy/route commit in <code>gitops-fluxcd</code>, push, and reconcile (step 7). The MCP server is then unauthenticated again, or unreachable if the route itself is reverted.</li>
+<li>Keycloak: delete client scopes <code>mcp</code> and <code>mcp-web-fetcher</code> and any <code>dcr-test</code> clients. Nothing else depends on them.</li>
+</ul>
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://modelcontextprotocol.io/specification/latest/basic/authorization">MCP authorization specification</a></li>
+<li><a href="https://www.keycloak.org/securing-apps/client-registration">Keycloak client registration</a></li>
+<li><a href="https://agentgateway.dev/docs/">agentgateway documentation</a></li>
+</ul>
+
+
+
+
+
+
+
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 10, 2026 17:59:44 UTC">October 10, 2026</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.annotate", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.instant", "navigation.tabs", "navigation.tabs.sticky"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
