@@ -151,4 +151,4 @@ kubectl get pods --all-namespaces
 After successful Kubernetes setup:
 
 1. **MetalLB** - Define an `IPAddressPool` and `L2Advertisement` for LoadBalancer services (only the chart is installed)
-2. **CI/CD** - Set up GitOps with ArgoCD
+2. **CI/CD** - Set up GitOps with Flux ([`riupie/gitops-fluxcd`](https://github.com/riupie/gitops-fluxcd))

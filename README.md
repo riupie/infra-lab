@@ -1,6 +1,6 @@
 
 # Infra Lab
-This project is designed as a hands-on learning experience to set up an on-premise Kubernetes cluster using KVM. It covers the deployment of core Kubernetes services and demonstrates how to automate infrastructure setup and application delivery using Infrastructure as Code (IaC) and GitOps principles, leveraging tools like Terraform and ArgoCD.
+This project is designed as a hands-on learning experience to set up an on-premise Kubernetes cluster using KVM. It covers the deployment of core Kubernetes services and demonstrates how to automate infrastructure setup and application delivery using Infrastructure as Code (IaC) and GitOps principles, leveraging tools like Terraform and Flux.
 
 Every step of the process—from planning and designing the cluster architecture to manually configuring each component—has been carefully documented. These guides are available in the documentation section, making it easy for anyone to replicate and build their own home Kubernetes cluster.
 
@@ -46,9 +46,9 @@ The following picture shows the high level components of opensource solutions us
         <th>Description</th>
     </tr>
     <tr>
-        <td><img width="32" src="https://argo-cd.readthedocs.io/en/stable/assets/logo.png"></td>
-        <td><a href="https://argo-cd.readthedocs.io/en/stable/">ArgoCD</a></td>
-        <td>GitOps tool</td>
+        <td><img width="32" src="https://fluxcd.io/favicons/android-chrome-192x192.png"></td>
+        <td><a href="https://fluxcd.io/">Flux</a></td>
+        <td>GitOps tool (manifests in <a href="https://github.com/riupie/gitops-fluxcd">gitops-fluxcd</a>)</td>
     </tr>
     <tr>
         <td><img width="32" src="https://cloudinit.readthedocs.io/en/latest/_static/logo.png"></td>

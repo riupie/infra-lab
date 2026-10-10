@@ -92,7 +92,7 @@ nodeplugin:
   name: csi-rbdplugin
 ```
 
-Alternative installation method using the referenced helm chart configuration [here](https://github.com/riupie/gitops-argocd/blob/main/overlays/development/ceph-csi-rbd/values.yaml)
+Cluster add-ons are managed with Flux in [`riupie/gitops-fluxcd`](https://github.com/riupie/gitops-fluxcd).
 
 ### 5. Provision a test volume
 
