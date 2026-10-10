@@ -18,13 +18,32 @@ Stack: agentgateway chart `v1.6.0`, Keycloak 26.x, Flux · Target: realm `mcp`, 
 
 ### 1. Review the model
 
-```text
-MCP client ──POST /mcp/web-fetcher──► agentgateway ── 401 + WWW-Authenticate: resource_metadata=…
-           ──GET /.well-known/oauth-protected-resource/mcp/web-fetcher──► agentgateway (PRM)
-           ──GET /.well-known/oauth-authorization-server/mcp/web-fetcher──► agentgateway (AS metadata, Keycloak-adapted)
-           ──POST /.well-known/oauth-authorization-server/mcp/web-fetcher/client-registration──► agentgateway ──► Keycloak (DCR)
-           ──auth code + PKCE, scope="openid mcp mcp-web-fetcher"──► Keycloak
-           ──Bearer <JWT>──► agentgateway: verify iss/aud/sig, authorize jwt.groups ∋ "users" ──► MCP server
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as MCP client
+    participant G as agentgateway<br/>gateway.lab.riupie.com
+    participant K as Keycloak<br/>keycloak.lab.riupie.com, realm mcp
+    participant M as MCP server<br/>web-fetcher
+
+    C->>G: POST /mcp/web-fetcher (no token)
+    G-->>C: 401 + WWW-Authenticate: resource_metadata=...
+    C->>G: GET /.well-known/oauth-protected-resource/mcp/web-fetcher
+    G-->>C: Protected resource metadata (resource, scopes_supported)
+    C->>G: GET /.well-known/oauth-authorization-server/mcp/web-fetcher
+    G-->>C: AS metadata (Keycloak-adapted, registration_endpoint on the gateway)
+    C->>G: POST .../client-registration (DCR)
+    G->>K: Forward to /realms/mcp/clients-registrations/openid-connect
+    K-->>G: client_id (public client)
+    G-->>C: client_id
+    C->>K: Authorization code + PKCE, scope "openid mcp mcp-web-fetcher"
+    Note over C,K: User logs in, must be in group "users"
+    K-->>C: Access token (iss, aud, groups)
+    C->>G: POST /mcp/web-fetcher + Bearer token
+    Note over G: Verify iss, aud, signature (JWKS)<br/>authorize: jwt.groups contains "users"
+    G->>M: Forward MCP request
+    M-->>G: MCP response
+    G-->>C: MCP response
 ```
 
 Token contract the policy depends on:
