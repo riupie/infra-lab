@@ -25,11 +25,11 @@ nav:
       - Prerequisites: docs/getting-started/prerequisites.md
       - Infrastructure Deployment: docs/getting-started/infrastructure-deployment.md
       - Kubernetes Setup: docs/getting-started/kubernetes-setup.md
-  - Playbook:
+  - Playbooks:
     - BIND9 DNS:
       - Deployment: docs/playbooks/bind9/deployment.md
     - AI Gateway:
-      - Keycloak OAuth for MCP (DCR): docs/playbooks/ai-gateway/agentgateway-keycloak-mcp-auth.md
+      - Keycloak OAuth for MCP: docs/playbooks/ai-gateway/keycloak-mcp-auth.md
 
 theme:
   name: material
