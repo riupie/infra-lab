@@ -153,18 +153,67 @@ sudo grep secret /opt/bind9/config/keys/external-dns.key
 
 Use the value (without quotes) as the RFC2136 TSIG secret in the External-DNS configuration, with key name `externaldns-key` and algorithm `hmac-sha512`.
 
-### 8. (Optional) Resolve the lab zone from the Fedora host
+### 8. Resolve the lab zone from the Fedora host
 
-*On the host.* Route only `lab.riupie.com` queries to general01 through systemd-resolved on the lab bridge:
+*On the host.* Send only `lab.riupie.com` queries to general01, and keep every other lookup on the host's normal resolver. systemd-resolved does this with a per-link routing domain on the lab bridge. The bridge is created by libvirt, not NetworkManager, so a small systemd unit tied to the bridge device reapplies the setting whenever the bridge appears (boot, `virsh net-start net-lab`).
+
+Find the bridge name (`virbr1` on the reference host):
 
 ```bash
-BR=$(sudo virsh net-info net-lab | awk '/^Bridge/ {print $2}')
-sudo resolvectl dns "$BR" 192.168.10.9
-sudo resolvectl domain "$BR" '~lab.riupie.com'
+virsh net-info net-lab | awk '/^Bridge/ {print $2}'
+```
+
+Create the unit (replace `virbr1` if your bridge differs):
+
+```bash
+sudo tee /etc/systemd/system/lab-dns@.service >/dev/null <<'EOF'
+[Unit]
+Description=Route lab.riupie.com DNS to general01 via %i
+BindsTo=sys-subsystem-net-devices-%i.device
+After=sys-subsystem-net-devices-%i.device systemd-resolved.service
+Wants=systemd-resolved.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/resolvectl dns %i 192.168.10.9
+ExecStart=/usr/bin/resolvectl domain %i ~lab.riupie.com
+ExecStart=/usr/bin/resolvectl default-route %i false
+ExecStop=/usr/bin/resolvectl revert %i
+
+[Install]
+WantedBy=sys-subsystem-net-devices-%i.device
+EOF
+sudo systemctl daemon-reload
+sudo systemctl enable --now lab-dns@virbr1.service
+```
+
+Check it:
+
+```bash
+resolvectl status virbr1 | grep -E 'Default Route|DNS Servers|DNS Domain'
 resolvectl query ns1.lab.riupie.com
 ```
 
-This setting is runtime-only: it is lost when the libvirt network or the host restarts. Re-run the commands after a restart.
+Expected output:
+
+```text
+     Default Route: no
+       DNS Servers: 192.168.10.9
+        DNS Domain: ~lab.riupie.com
+ns1.lab.riupie.com: 192.168.10.9                -- link: virbr1
+```
+
+!!! warning "Don't use a global `DNS=` for this"
+    A drop-in such as `/etc/systemd/resolved.conf.d/lab.conf` with `DNS=192.168.10.9` and `Domains=~lab.riupie.com` resolves the lab zone, but systemd-resolved also uses a global DNS server as a default route. Every lookup from the host then also goes to general01, and lookups get slow or fail while general01 is down. If you have that file, remove it after enabling the unit:
+
+    ```bash
+    sudo rm /etc/systemd/resolved.conf.d/lab.conf
+    sudo systemctl restart systemd-resolved
+    sudo systemctl restart lab-dns@virbr1.service   # re-apply after the resolved restart
+    ```
+
+To undo: `sudo systemctl disable --now lab-dns@virbr1.service && sudo rm /etc/systemd/system/lab-dns@.service`.
 
 ## Verify
 
@@ -213,6 +262,7 @@ EOF
 | `nsupdate` returns `SERVFAIL`/`REFUSED`, log shows `permission denied` on `.jnl` | `zones/` not writable by uid 53 | Step 4 |
 | `nsupdate` returns `NOTAUTH` / `tsig verify failure` | Wrong key file or algorithm mismatch | Use the key from step 3; algorithm must be `hmac-sha512` on both sides |
 | Recursive queries return `REFUSED` | Client is outside `allow-recursion` | Add the client network to `allow-recursion` in `named.conf.options`, redeploy `config/` (step 2), `docker compose restart` |
+| Host can't resolve `*.lab.riupie.com`, or every host lookup is slow while general01 is down | Step 8 not applied, or a global `DNS=192.168.10.9` drop-in in `/etc/systemd/resolved.conf.d/` | `resolvectl status virbr1` must show `Default Route: no` and `DNS Domain: ~lab.riupie.com`; remove the global drop-in (step 8 warning) |
 | Container stays `unhealthy` | `named` failed to load the zone | `docker compose logs bind9`, then re-run step 5 |
 
 Disabling the systemd-resolved stub listener on general01:

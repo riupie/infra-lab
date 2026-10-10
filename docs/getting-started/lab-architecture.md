@@ -37,7 +37,7 @@ graph TB
 | Virtualization | KVM, libvirt 12 (`qemu:///system`), storage pool `default` at `/var/lib/libvirt/images` |
 | Tools | OpenTofu, k0sctl, kubectl, flux; the kube context is `lab-cluster` |
 
-The host resolves `lab.riupie.com` through general01 using a systemd-resolved routing domain on `virbr1`. See [Set Up Dynamic DNS, step 8](../playbooks/dynamic-dns.md#8-optional-resolve-the-lab-zone-from-the-fedora-host).
+The host resolves `lab.riupie.com` through general01 using a systemd-resolved routing domain on `virbr1`. See [Set Up Dynamic DNS, step 8](../playbooks/dynamic-dns.md#8-resolve-the-lab-zone-from-the-fedora-host).
 
 ## Network
 

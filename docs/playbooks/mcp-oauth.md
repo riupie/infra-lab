@@ -12,7 +12,7 @@ Stack: agentgateway chart `v1.6.0`, Keycloak 26.x, Flux · Target: realm `mcp`, 
 - [ ] Gateway `gateway-ai` (ns `gateway-system`) serving host `gateway.lab.riupie.com`: `kubectl --context lab-cluster -n gateway-system get gateway gateway-ai`
 - [ ] Upstream MCP server deployed, e.g. `mcp-website-fetcher` (ns `mcp-server`), path `/mcp/web-fetcher`
 - [ ] Access to the `riupie/gitops-fluxcd` repo: manifests live under `apps/development/mcp-website-fetcher/` and are deployed by Flux; this page documents the Keycloak and gateway setup behind them
-- [ ] On the Fedora host: `*.lab.riupie.com` resolves (see [Dynamic DNS step 8](dynamic-dns.md#8-optional-resolve-the-lab-zone-from-the-fedora-host)), and `curl`/`jq` are installed (`sudo dnf install -y jq`)
+- [ ] On the Fedora host: `*.lab.riupie.com` resolves (see [Dynamic DNS step 8](dynamic-dns.md#8-resolve-the-lab-zone-from-the-fedora-host)), and `curl`/`jq` are installed (`sudo dnf install -y jq`)
 
 ## Steps
 
