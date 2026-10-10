@@ -7,15 +7,15 @@ options {
     // recursion only for the lab; localnets covers Docker's bridge (dig @localhost on bastion01)
     allow-recursion { localnets; 192.168.10.0/24; 192.168.11.0/24; };
 
+    // libvirt dnsmasq on the Fedora KVM host
     forwarders {
-        8.8.8.8;
-        1.1.1.1;
+        192.168.10.1;
     };
 
     dnssec-validation auto;
 
     listen-on { any; };
-    listen-on-v6 { any; };
+    listen-on-v6 { none; };
 };
 logging {
    channel stdout_channel {

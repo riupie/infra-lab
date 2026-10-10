@@ -4,7 +4,7 @@ This playbook runs authoritative DNS for the `lab.riupie.com` zone plus recursiv
 
 Use it to set up (or rebuild) the lab DNS server on the bastion, before configuring External-DNS in Kubernetes (step 3 produces its TSIG key).
 
-Stack: BIND9 9.20 (`internetsystemsconsortium/bind9:9.20`), Docker Compose · Target: `bastion01` (`192.168.10.9`, Debian 12), driven from the Fedora 44 KVM host · Env: lab
+Stack: BIND9 9.20 (`internetsystemsconsortium/bind9:9.20`), Docker Compose · Target: `bastion01` (`192.168.10.9`, hostname `general01`, Debian 12), driven from the Fedora 44 KVM host · Env: lab
 
 The configuration lives in the repo under [`addons/bind9/`](https://github.com/riupie/infra-lab/tree/main/addons/bind9); the files shown below are embedded from there, so edit the repo, not this page.
 
@@ -23,7 +23,7 @@ The configuration lives in the repo under [`addons/bind9/`](https://github.com/r
 *On the host:*
 
 ```bash
-ssh cloud@192.168.10.9 'sudo install -d -o cloud -g cloud /opt/bind9 /opt/bind9/config/keys'
+ssh cloud@192.168.10.9 'sudo install -d /opt/bind9/config/keys /opt/bind9/zones /opt/bind9/cache'
 ```
 
 ### 2. Copy the configuration
@@ -31,7 +31,7 @@ ssh cloud@192.168.10.9 'sudo install -d -o cloud -g cloud /opt/bind9 /opt/bind9/
 *On the host:*
 
 ```bash
-rsync -av --exclude README.md --exclude 'config/keys/' \
+rsync -av --rsync-path='sudo rsync' --exclude README.md --exclude 'config/keys/' \
   addons/bind9/ cloud@192.168.10.9:/opt/bind9/
 ```
 
@@ -77,12 +77,10 @@ The copied files:
 ```bash
 cd /opt/bind9
 docker run --rm --entrypoint tsig-keygen internetsystemsconsortium/bind9:9.20 \
-  -a hmac-sha512 externaldns-key > config/keys/external-dns.key
-chmod 640 config/keys/external-dns.key
-sudo chgrp 53 config/keys/external-dns.key   # gid 53 = bind inside the image
+  -a hmac-sha512 externaldns-key | sudo tee config/keys/external-dns.key >/dev/null
 ```
 
-Expected content of `config/keys/external-dns.key`:
+Expected content of `config/keys/external-dns.key` (`sudo cat` it; it is not world-readable after step 4):
 
 ```text
 key "externaldns-key" {
@@ -96,10 +94,11 @@ key "externaldns-key" {
 
 ### 4. Set ownership for named
 
-*On bastion01.* `named` runs as uid/gid 53 inside the container and must write the zone journal and its cache:
+*On bastion01.* `named` runs as uid/gid 53 (`bind`) inside the container; it must read the config and key, and write the zone journal and its cache:
 
 ```bash
-sudo chown -R 53:53 /opt/bind9/zones /opt/bind9/cache
+sudo chown -R 53:53 /opt/bind9/config /opt/bind9/zones /opt/bind9/cache
+sudo chmod 640 /opt/bind9/config/keys/external-dns.key
 ```
 
 If you skip this, dynamic updates fail with `permission denied` on `lab.riupie.com.zone.jnl`.
@@ -149,7 +148,7 @@ running
 *On bastion01:*
 
 ```bash
-grep secret /opt/bind9/config/keys/external-dns.key
+sudo grep secret /opt/bind9/config/keys/external-dns.key
 ```
 
 Use the value (without quotes) as the RFC2136 TSIG secret in the External-DNS configuration, with key name `externaldns-key` and algorithm `hmac-sha512`.
@@ -211,7 +210,7 @@ EOF
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | `docker compose up` fails: `address already in use` on port 53 | The systemd-resolved stub listener holds port 53 (`sudo ss -lntup 'sport = :53'` shows `systemd-resolve`) | Disable the stub listener (below) |
-| `nsupdate` returns `REFUSED`, log shows `permission denied` on `.jnl` | `zones/` not writable by uid 53 | Step 4 |
+| `nsupdate` returns `SERVFAIL`/`REFUSED`, log shows `permission denied` on `.jnl` | `zones/` not writable by uid 53 | Step 4 |
 | `nsupdate` returns `NOTAUTH` / `tsig verify failure` | Wrong key file or algorithm mismatch | Use the key from step 3; algorithm must be `hmac-sha512` on both sides |
 | Recursive queries return `REFUSED` | Client is outside `allow-recursion` | Add the client network to `allow-recursion` in `named.conf.options`, redeploy `config/` (step 2), `docker compose restart` |
 | Container stays `unhealthy` | `named` failed to load the zone | `docker compose logs bind9`, then re-run step 5 |
@@ -232,7 +231,7 @@ sudo systemctl restart systemd-resolved
 cd /opt/bind9 && docker compose down
 ```
 
-Clients that use `192.168.10.9` as their resolver lose DNS until it is restarted. `/opt/bind9` (zone, journal, key) is left in place; delete it only if you are rebuilding from scratch, because you will need a new TSIG key in External-DNS afterwards.
+Clients that use `192.168.10.9` as their resolver (including the Fedora host for `lab.riupie.com`) lose DNS until it is restarted. `/opt/bind9` (zone, journal, key) is left in place; delete it only if you are rebuilding from scratch, because you will need a new TSIG key in External-DNS afterwards.
 
 ## References
 

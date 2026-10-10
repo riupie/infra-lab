@@ -8,7 +8,7 @@ Stack: agentgateway chart `v1.6.0`, Keycloak 26.x, Flux · Target: realm `mcp`, 
 
 ## Prerequisites
 
-- [ ] Keycloak reachable at `https://keycloak.lab.riupie.com`, realm `mcp` exists. Check the version in the console (Help → Server info); the UI paths below are from Keycloak 26.x.
+- [ ] Keycloak reachable at `https://keycloak.lab.riupie.com` (runs on bastion01 from `/opt/keycloak` with Docker Compose, exposed through the gateway), realm `mcp` exists. Check the version in the console (Help → Server info); the UI paths below are from Keycloak 26.x.
 - [ ] Gateway `gateway-ai` (ns `gateway-system`) serving host `gateway.lab.riupie.com`: `kubectl --context lab-cluster -n gateway-system get gateway gateway-ai`
 - [ ] Upstream MCP server deployed, e.g. `mcp-website-fetcher` (ns `mcp-server`), path `/mcp/web-fetcher`
 - [ ] Access to the `riupie/gitops-fluxcd` repo: manifests live under `apps/development/mcp-website-fetcher/` and are deployed by Flux; this page documents the Keycloak and gateway setup behind them
@@ -22,7 +22,7 @@ Stack: agentgateway chart `v1.6.0`, Keycloak 26.x, Flux · Target: realm `mcp`, 
 MCP client ──POST /mcp/web-fetcher──► agentgateway ── 401 + WWW-Authenticate: resource_metadata=…
            ──GET /.well-known/oauth-protected-resource/mcp/web-fetcher──► agentgateway (PRM)
            ──GET /.well-known/oauth-authorization-server/mcp/web-fetcher──► agentgateway (AS metadata, Keycloak-adapted)
-           ──POST /realms/mcp/clients-registrations/openid-connect──► Keycloak (DCR)
+           ──POST /.well-known/oauth-authorization-server/mcp/web-fetcher/client-registration──► agentgateway ──► Keycloak (DCR)
            ──auth code + PKCE, scope="openid mcp mcp-web-fetcher"──► Keycloak
            ──Bearer <JWT>──► agentgateway: verify iss/aud/sig, authorize jwt.groups ∋ "users" ──► MCP server
 ```
@@ -164,7 +164,7 @@ Expected: `issuer` is exactly `https://keycloak.lab.riupie.com/realms/mcp`, and 
 curl -si -X POST https://gateway.lab.riupie.com/mcp/web-fetcher | head
 # protected-resource metadata
 curl -s https://gateway.lab.riupie.com/.well-known/oauth-protected-resource/mcp/web-fetcher | jq
-# authorization-server metadata (should expose a registration_endpoint)
+# authorization-server metadata: registration_endpoint points at the gateway's .../client-registration
 curl -s https://gateway.lab.riupie.com/.well-known/oauth-authorization-server/mcp/web-fetcher | jq
 ```
 
