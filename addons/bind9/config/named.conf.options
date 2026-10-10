@@ -4,6 +4,8 @@ options {
     directory "/var/cache/bind";
     recursion yes;
     allow-query { any; };
+    // recursion only for the lab; localnets covers Docker's bridge (dig @localhost on bastion01)
+    allow-recursion { localnets; 192.168.10.0/24; 192.168.11.0/24; };
 
     forwarders {
         8.8.8.8;

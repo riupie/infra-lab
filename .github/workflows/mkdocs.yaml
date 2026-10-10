@@ -5,6 +5,8 @@ on:
       - main
     paths:
       - docs/**
+      - addons/bind9/**   # embedded in the BIND9 playbook via snippets
+      - mkdocs.yml
 permissions:
   contents: write
 jobs:

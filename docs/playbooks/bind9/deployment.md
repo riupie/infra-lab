@@ -1,293 +1,241 @@
 # Deploy BIND9 DNS on bastion01
 
-This playbook provides authoritative DNS for the `lab.riupie.com` zone plus recursive resolution for the lab, with TSIG-secured dynamic updates so External-DNS can register records from Kubernetes.
+This playbook runs authoritative DNS for the `lab.riupie.com` zone plus recursive resolution for the lab, with TSIG-secured dynamic updates so External-DNS can register records from Kubernetes.
 
-Use it to set up (or rebuild) the lab DNS server on the bastion host, before configuring External-DNS in Kubernetes (step 10 produces its TSIG key).
+Use it to set up (or rebuild) the lab DNS server on the bastion, before configuring External-DNS in Kubernetes (step 3 produces its TSIG key).
 
-Stack: BIND9 9.20, Docker Compose · Target: `bastion01` (`192.168.10.9`) · Env: lab
+Stack: BIND9 9.20 (`internetsystemsconsortium/bind9:9.20`), Docker Compose · Target: `bastion01` (`192.168.10.9`, Debian 12), driven from the Fedora 44 KVM host · Env: lab
+
+The configuration lives in the repo under [`addons/bind9/`](https://github.com/riupie/infra-lab/tree/main/addons/bind9); the files shown below are embedded from there, so edit the repo, not this page.
 
 ## Prerequisites
 
-| Component | Requirement | Verification Command |
-|-----------|-------------|---------------------|
-| **Docker** | 20.10+ | `docker --version` |
-| **Docker Compose** | 2.0+ | `docker compose version` |
+- [ ] bastion01 reachable from the host: `ssh cloud@192.168.10.9 hostname`
+- [ ] Docker Engine with the Compose plugin on bastion01: `docker --version && docker compose version`
+- [ ] Port 53 free on bastion01: `sudo ss -lntup 'sport = :53'` prints nothing (see [Troubleshooting](#troubleshooting) if not)
+- [ ] `dig` and `nsupdate` on the Fedora host: `sudo dnf install -y bind-utils`
+- [ ] A checkout of this repo on the host; commands marked *On the host* run from its root
 
 ## Steps
 
-### 1. Prepare the deployment directory
+### 1. Prepare the directory on bastion01
+
+*On the host:*
 
 ```bash
-# Create BIND9 deployment directory
-mkdir -p /opt/bind9/{config,zones,cache,config/keys}
+ssh cloud@192.168.10.9 'sudo install -d -o cloud -g cloud /opt/bind9 /opt/bind9/config/keys'
+```
 
-# Set proper ownership
-chown -R cloud:cloud /opt/bind9
+### 2. Copy the configuration
 
-# Switch back to cloud user
-su - cloud
+*On the host:*
+
+```bash
+rsync -av --exclude README.md --exclude 'config/keys/' \
+  addons/bind9/ cloud@192.168.10.9:/opt/bind9/
+```
+
+!!! warning "Rebuilds"
+    External-DNS writes records into the zone journal (`zones/*.jnl`) on bastion01. Re-running this rsync on a live server overwrites `zones/lab.riupie.com.zone`; on an existing server copy only `config/` and `docker-compose.yaml`, and bump the SOA serial when you edit the zone by hand.
+
+The copied files:
+
+=== "named.conf"
+
+    ```text
+    --8<-- "addons/bind9/config/named.conf"
+    ```
+
+=== "named.conf.options"
+
+    ```text
+    --8<-- "addons/bind9/config/named.conf.options"
+    ```
+
+=== "named.conf.local"
+
+    ```text
+    --8<-- "addons/bind9/config/named.conf.local"
+    ```
+
+=== "lab.riupie.com.zone"
+
+    ```text
+    --8<-- "addons/bind9/zones/lab.riupie.com.zone"
+    ```
+
+=== "docker-compose.yaml"
+
+    ```yaml
+    --8<-- "addons/bind9/docker-compose.yaml"
+    ```
+
+### 3. Generate the TSIG key
+
+*On bastion01* (`ssh cloud@192.168.10.9`). The key is generated inside the BIND image, so the bastion needs no BIND packages:
+
+```bash
 cd /opt/bind9
+docker run --rm --entrypoint tsig-keygen internetsystemsconsortium/bind9:9.20 \
+  -a hmac-sha512 externaldns-key > config/keys/external-dns.key
+chmod 640 config/keys/external-dns.key
+sudo chgrp 53 config/keys/external-dns.key   # gid 53 = bind inside the image
 ```
 
-### 2. Generate the TSIG key
+Expected content of `config/keys/external-dns.key`:
 
-```bash
-# Generate authentication key for dynamic DNS updates
-tsig-keygen -a hmac-sha512 externaldns-key > /opt/bind9/config/keys/external-dns.key
-
-# Verify key generation
-cat config/keys/external-dns.key
-
-# Expected output format:
-# key "externaldns-key" {
-#     algorithm hmac-sha256;
-#     secret "base64-key-string==";
-# };
-```
-
-!!! warning "Key Security"
-    Store the generated key securely. This key will be used by External-DNS for dynamic updates.
-
-### 3. Create configuration files
-
-#### Main configuration
-
-```bash
-cat > config/named.conf << 'EOF'
-include "/etc/bind/named.conf.options";
-include "/etc/bind/named.conf.local";
-EOF
-```
-
-#### Server options
-
-```bash
-cat > config/named.conf.options << 'EOF'
-//The following keys are used for dynamic DNS updates
-include "/etc/bind/keys/external-dns.key";
-
-options {
-    directory "/var/cache/bind";
-    recursion yes;
-    allow-query { any; };
-
-    forwarders {
-        8.8.8.8;
-        1.1.1.1;
-    };
-
-    dnssec-validation auto;
-
-    listen-on { any; };
+```text
+key "externaldns-key" {
+	algorithm hmac-sha512;
+	secret "<base64>";
 };
-
-logging {
-   channel stdout_channel {
-       stderr;
-       severity info;
-       print-category yes;
-       print-severity yes;
-       print-time yes;
-   };
-   category default {
-       stdout_channel;
-   };
-   category queries {
-       stdout_channel;
-   };
-   category security {
-       stdout_channel;
-   };
-   category dnssec {
-       stdout_channel;
-   };
-};
-EOF
 ```
 
-#### Zone configuration
+!!! warning "Key security"
+    This key can rewrite any record in `lab.riupie.com`. Don't commit it unencrypted (the repo copy is protected by git-crypt) and don't paste it into docs or tickets.
+
+### 4. Set ownership for named
+
+*On bastion01.* `named` runs as uid/gid 53 inside the container and must write the zone journal and its cache:
 
 ```bash
-cat > config/named.conf.local << 'EOF'
-zone "lab.riupie.com" {
-    type master;
-    file "/zones/lab.riupie.com.zone";
-    allow-transfer {
-        key "externaldns-key";
-    };
-    update-policy {
-        grant externaldns-key zonesub any;
-    };
-};
-EOF
+sudo chown -R 53:53 /opt/bind9/zones /opt/bind9/cache
 ```
 
-### 4. Create the zone file
+If you skip this, dynamic updates fail with `permission denied` on `lab.riupie.com.zone.jnl`.
+
+### 5. Validate the configuration
+
+*On bastion01:*
 
 ```bash
-# Create initial zone file with current date as serial
-SERIAL=$(date +%Y%m%d%H)
-
-cat > zones/lab.riupie.com.zone << EOF
-\$TTL 3600	; 1 hour
-lab.riupie.com.		IN SOA	ns1.lab.riupie.com. admin.lab.riupie.com. (
-				${SERIAL} ; serial
-				3600       ; refresh (1 hour)
-				1800       ; retry (30 minutes)
-				604800     ; expire (1 week)
-				86400      ; minimum (1 day)
-				)
-			NS	ns1.lab.riupie.com.
-			
-ns1.lab.riupie.com.     A       192.168.10.9
-EOF
+cd /opt/bind9
+docker run --rm -v "$PWD/config:/etc/bind" --entrypoint named-checkconf \
+  internetsystemsconsortium/bind9:9.20 /etc/bind/named.conf
+docker run --rm -v "$PWD/zones:/zones" --entrypoint named-checkzone \
+  internetsystemsconsortium/bind9:9.20 lab.riupie.com /zones/lab.riupie.com.zone
 ```
 
-### 5. Create the Docker Compose file
+Expected output (`named-checkconf` prints nothing when the config is valid):
 
-```bash
-cat > docker-compose.yaml << 'EOF'
-services:
-  bind9:
-    image: internetsystemsconsortium/bind9:9.20
-    container_name: bind9
-    ports:
-      - "53:53/udp"
-      - "53:53/tcp"
-    volumes:
-      - ./config:/etc/bind
-      - ./zones:/zones
-      - ./cache:/var/cache/bind
-    restart: unless-stopped
-    environment:
-      - TZ=UTC
-    healthcheck:
-      test: ["CMD", "dig", "@localhost", "lab.riupie.com", "SOA"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-EOF
+```text
+zone lab.riupie.com/IN: loaded serial 2025050307
+OK
 ```
 
-### 6. Validate the configuration files
+### 6. Start BIND9
+
+*On bastion01:*
 
 ```bash
-# Check BIND configuration syntax
- docker run --rm -v "$(pwd)/config:/etc/bind" \
-   --entrypoint named-checkconf \
-   internetsystemsconsortium/bind9:9.20 \
-   /etc/bind/named.conf
-
-# Expected output: (no output means configuration is valid)
-```
-
-### 7. Validate the zone file
-
-```bash
-# Check zone file syntax
-docker run --rm \
-  -v "$(pwd):/bind-data" \
-  --entrypoint named-checkzone \
-  internetsystemsconsortium/bind9:9.20 \
-  lab.riupie.com /bind-data/zones/lab.riupie.com.zone
-
-# Expected output:
-# zone lab.riupie.com/IN: loaded serial 2025050307
-# OK
-```
-
-### 8. Start the BIND9 service
-
-```bash
-# Start the DNS server
+cd /opt/bind9
 docker compose up -d
-
-# Verify container is running
 docker compose ps
-
-# Expected output:
-# NAME      IMAGE                                    COMMAND             SERVICE   CREATED         STATUS                   PORTS
-# bind9     internetsystemsconsortium/bind9:9.20    "/usr/sbin/named"   bind9     2 seconds ago   Up 1 second (healthy)   0.0.0.0:53->53/tcp, 0.0.0.0:53->53/udp
+docker compose logs bind9 | grep -E 'loaded serial|running'
 ```
 
-### 9. Monitor startup logs
+Expected output (`STATUS` reaches `healthy` after up to 40 s):
+
+```text
+NAME    IMAGE                                  SERVICE   STATUS
+bind9   internetsystemsconsortium/bind9:9.20   bind9     Up 1 minute (healthy)
+...
+zone lab.riupie.com/IN: loaded serial 2025050307
+running
+```
+
+### 7. Hand the TSIG secret to External-DNS
+
+*On bastion01:*
 
 ```bash
-# Check container logs
-docker compose logs -f bind9
-
-# Expected log entries:
-# bind9  | starting BIND 9.20.3 (Extended Support Version)
-# bind9  | zone lab.riupie.com/IN: loaded serial 2025050307
-# bind9  | running
+grep secret /opt/bind9/config/keys/external-dns.key
 ```
 
-### 10. Extract the TSIG key for External-DNS
+Use the value (without quotes) as the RFC2136 TSIG secret in the External-DNS configuration, with key name `externaldns-key` and algorithm `hmac-sha512`.
+
+### 8. (Optional) Resolve the lab zone from the Fedora host
+
+*On the host.* Route only `lab.riupie.com` queries to bastion01 through systemd-resolved on the lab bridge:
 
 ```bash
-# On bastion01, extract the TSIG key secret
-cd /opt/bind9
-grep secret config/keys/external-dns.key
-
-# Output format:
-# secret "base64-encoded-key-here==";
-
-# Copy this key for External-DNS configuration in Kubernetes
+BR=$(sudo virsh net-info net-lab | awk '/^Bridge/ {print $2}')
+sudo resolvectl dns "$BR" 192.168.10.9
+sudo resolvectl domain "$BR" '~lab.riupie.com'
+resolvectl query ns1.lab.riupie.com
 ```
+
+This setting is runtime-only: it is lost when the libvirt network or the host restarts. Re-run the commands after a restart.
 
 ## Verify
 
-### DNS resolution
+### 1. Authoritative and recursive resolution
+
+*On the host:*
 
 ```bash
-# Test internal zone resolution
-dig @localhost lab.riupie.com SOA
-
-# Expected output includes:
-# ;; ANSWER SECTION:
-# lab.riupie.com. 3600 IN SOA ns1.lab.riupie.com. admin.lab.riupie.com. ...
-
-# Test recursive resolution
-dig @localhost google.com A
-
-# Should return Google's IP addresses
+dig @192.168.10.9 lab.riupie.com SOA +short
+dig @192.168.10.9 example.com A +short
 ```
 
-### Dynamic DNS updates
+Expected output: the SOA record (`ns1.lab.riupie.com. admin.lab.riupie.com. <serial> 3600 1800 604800 86400`), then one or more IP addresses for `example.com`.
+
+### 2. Dynamic update with the TSIG key
+
+*On bastion01* (the key stays on the server):
 
 ```bash
-# Create a test update file
-cat > test-update.txt << 'EOF'
-server 192.168.10.9
+cd /opt/bind9
+docker compose exec -T bind9 nsupdate -k /etc/bind/keys/external-dns.key <<'EOF'
+server 127.0.0.1
 zone lab.riupie.com.
 update add test.lab.riupie.com. 300 A 192.168.10.100
 send
 EOF
+dig @127.0.0.1 test.lab.riupie.com A +short
+```
 
-# Test dynamic update (requires TSIG key setup)
-nsupdate -k config/keys/external-dns.key < test-update.txt
+Expected output: `192.168.10.100`. Remove the test record:
 
-# Verify the update
-dig @192.168.10.9 test.lab.riupie.com A
+```bash
+docker compose exec -T bind9 nsupdate -k /etc/bind/keys/external-dns.key <<'EOF'
+server 127.0.0.1
+zone lab.riupie.com.
+update delete test.lab.riupie.com. A
+send
+EOF
 ```
 
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| BIND9 cannot bind port 53 (Debian-based hosts) | `systemd-resolved` stub listener conflicts with BIND9 | Point `systemd-resolved` at the BIND9 server and disable the stub listener (below) |
+| `docker compose up` fails: `address already in use` on port 53 | The systemd-resolved stub listener holds port 53 (`sudo ss -lntup 'sport = :53'` shows `systemd-resolve`) | Disable the stub listener (below) |
+| `nsupdate` returns `REFUSED`, log shows `permission denied` on `.jnl` | `zones/` not writable by uid 53 | Step 4 |
+| `nsupdate` returns `NOTAUTH` / `tsig verify failure` | Wrong key file or algorithm mismatch | Use the key from step 3; algorithm must be `hmac-sha512` on both sides |
+| Recursive queries return `REFUSED` | Client is outside `allow-recursion` | Add the client network to `allow-recursion` in `named.conf.options`, redeploy `config/` (step 2), `docker compose restart` |
+| Container stays `unhealthy` | `named` failed to load the zone | `docker compose logs bind9`, then re-run step 5 |
 
-Edit `/etc/systemd/resolved.conf`:
-
-```bash
-[Resolve]
-DNS=127.0.0.1   # or your BIND9 server IP
-DNSStubListener=no
-```
-
-Then restart the service:
+Disabling the systemd-resolved stub listener on bastion01:
 
 ```bash
+sudo mkdir -p /etc/systemd/resolved.conf.d
+printf '[Resolve]\nDNS=127.0.0.1\nDNSStubListener=no\n' | sudo tee /etc/systemd/resolved.conf.d/bind9.conf
 sudo systemctl restart systemd-resolved
 ```
+
+## Rollback
+
+*On bastion01:*
+
+```bash
+cd /opt/bind9 && docker compose down
+```
+
+Clients that use `192.168.10.9` as their resolver lose DNS until it is restarted. `/opt/bind9` (zone, journal, key) is left in place; delete it only if you are rebuilding from scratch, because you will need a new TSIG key in External-DNS afterwards.
+
+## References
+
+- [BIND 9 Administrator Reference Manual](https://bind9.readthedocs.io/en/v9.20.0/)
+- [ISC BIND9 container image](https://hub.docker.com/r/internetsystemsconsortium/bind9)
+- [External-DNS RFC2136 provider](https://kubernetes-sigs.github.io/external-dns/latest/docs/tutorials/rfc2136/)
