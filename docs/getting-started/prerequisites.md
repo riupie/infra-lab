@@ -50,40 +50,55 @@ All commands below assume a regular user with `sudo`.
 ### Install KVM and Virtualization Tools
 
 ```bash
-# Update package metadata
-sudo dnf makecache
-
-# Install git, KVM and virtualization packages
 sudo dnf -y install \
     git \
     qemu-kvm \
     libvirt \
-    libvirt-daemon \
     virt-install \
     libosinfo \
     guestfs-tools
-
-# Enable and start libvirt
-sudo systemctl enable --now libvirtd
-
-# Allow your user to manage the system libvirt instance
-sudo usermod -aG libvirt "$USER"
-
-# Log out and back in to apply the group change
 ```
 
-!!! note "libvirt daemon on newer distributions"
-    Newer Fedora and RHEL-family releases use modular daemons (`virtqemud`, `virtnetworkd`, `virtstoraged`) instead of the monolithic `libvirtd`. Check what your host provides with `systemctl list-unit-files 'virt*d*'`. On the tested Fedora 44 host `libvirtd` is enabled and active. If `libvirtd` is missing on your host, enable the modular sockets instead (`sudo systemctl enable --now virtqemud.socket virtnetworkd.socket virtstoraged.socket`) and use `systemctl status virtqemud` in the verification steps.
+### Enable the libvirt daemons
 
-Non-root users default to the per-user session (`qemu:///session`) connection. To make `virsh` use the system connection without `sudo`, set `LIBVIRT_DEFAULT_URI` and persist it in `.bashrc`/`.zshrc` (depends on your shell). The OpenTofu providers in this repo already use `qemu:///system` explicitly.
+Current libvirt uses **modular daemons**: one per driver (`virtqemud` for VMs, `virtnetworkd` for networks, `virtstoraged` for storage pools, and so on), each started on demand by its systemd socket. The monolithic `libvirtd` is deprecated; don't enable it. Fedora enables the modular sockets by default, so this loop usually changes nothing, but it is safe to run:
 
 ```bash
-echo 'export LIBVIRT_DEFAULT_URI="qemu:///system"' >> ~/.bashrc
-source ~/.bashrc
-
-# Verify (should list VMs without sudo)
-virsh list --all
+for drv in qemu network storage nodedev nwfilter secret interface proxy; do
+  sudo systemctl enable --now virt${drv}d.socket virt${drv}d-ro.socket virt${drv}d-admin.socket
+done
 ```
+
+!!! warning "Host that already runs `libvirtd`"
+    If `systemctl is-active libvirtd` prints `active` (for example, after following an older version of this guide), switch to the modular daemons. Shut down the lab VMs first: the daemon switch disconnects running guests from management until `virtqemud` takes over.
+
+    ```bash
+    sudo systemctl disable --now libvirtd.service libvirtd.socket libvirtd-ro.socket libvirtd-admin.socket
+    # then re-run the loop above
+    ```
+
+### Allow your user to use the system connection
+
+Two things are needed to run `virsh` against the system instance (`qemu:///system`, where the lab VMs live) without `sudo`:
+
+1. Membership of the `libvirt` group, which polkit uses to authorize access:
+
+    ```bash
+    sudo usermod -aG libvirt "$USER"
+    ```
+
+    Log out and back in to apply the group change.
+
+2. `LIBVIRT_DEFAULT_URI`. Without it, `virsh` run as a normal user connects to the per-user session instance (`qemu:///session`) and shows no lab VMs or networks. Persist it in your shell profile (`~/.bashrc` here; use `~/.zshrc` for zsh):
+
+    ```bash
+    echo 'export LIBVIRT_DEFAULT_URI="qemu:///system"' >> ~/.bashrc
+    source ~/.bashrc
+    virsh uri          # qemu:///system
+    virsh list --all   # works without sudo
+    ```
+
+The OpenTofu providers in this repo set `qemu:///system` explicitly and don't need the variable.
 
 ### Install OpenTofu
 
@@ -169,8 +184,9 @@ sudo dnf install -y virt-manager virt-viewer
 # Check if KVM modules are loaded
 lsmod | grep kvm
 
-# Verify libvirt service
-systemctl status libvirtd
+# Verify the libvirt sockets are listening (the daemons start on first use)
+systemctl is-active virtqemud.socket virtnetworkd.socket virtstoraged.socket
+systemctl is-active libvirtd    # should print inactive
 
 # Test virtualization capabilities
 virt-host-validate
@@ -233,9 +249,9 @@ virsh pool-list --all
 | Symptom | Likely cause | Check / fix |
 |---------|--------------|-------------|
 | `grep -Ec '(vmx\|svm)'` returns `0` | Virtualization disabled | Enable VT-x/AMD-V in firmware |
-| `virsh list` fails with `Failed to connect socket to '/run/user/.../libvirt-sock'` | Using the session connection | Set `LIBVIRT_DEFAULT_URI="qemu:///system"` and re-login |
+| `virsh list --all` is empty, or `virsh` errors with `Failed to connect socket to '/run/user/.../...-sock'` | Connected to the session instance | Set `LIBVIRT_DEFAULT_URI="qemu:///system"` (check with `virsh uri`) |
 | `virsh` asks for authentication or `permission denied` | Not in the `libvirt` group yet | `id` must list `libvirt`; log out and in again |
-| `Unit libvirtd.service not found` | Modular-daemon distribution | See the note under *Install KVM and Virtualization Tools* |
+| `Failed to connect socket to '/var/run/libvirt/virtqemud-sock'` | Modular sockets not enabled | Run the loop in *Enable the libvirt daemons* |
 | `dnf: No match for argument: tofu` | OpenTofu repo not configured | Add the repo from the OpenTofu install page |
 
 ## Cleanup

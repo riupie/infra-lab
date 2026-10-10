@@ -19,7 +19,7 @@ Before starting, complete the [Prerequisites](prerequisites.md) guide. You need,
 - `tofu` 1.7+ and the `TF_ENCRYPTION` variable (your own passphrase)
 - `TF_VAR_admin_password`
 - an SSH public key (`~/.ssh/id_ed25519.pub`)
-- access to the system libvirt instance (`virsh list` works without `sudo`)
+- `LIBVIRT_DEFAULT_URI="qemu:///system"` exported and membership of the `libvirt` group (`virsh uri` prints `qemu:///system`, `virsh list --all` works without `sudo`)
 
 ## Repository Setup
 
