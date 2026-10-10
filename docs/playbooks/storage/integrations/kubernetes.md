@@ -1,15 +1,21 @@
-# Kubernetes Integration Guide
+# Integrate Ceph RBD with Kubernetes (Ceph CSI)
 
-## Overview
+This playbook enables dynamic provisioning of persistent volumes in Kubernetes backed by Ceph, using the Ceph CSI (Container Storage Interface) driver for RBD (block storage).
 
-This guide provides comprehensive instructions for integrating Ceph storage with Kubernetes using the Ceph CSI (Container Storage Interface) driver. The integration enables dynamic provisioning of persistent volumes with support for RBD (block storage) and S3 compatible storage.
+Use it when a Kubernetes cluster needs `ReadWriteOnce` PVCs from the lab Ceph cluster, after [Ceph deployment](../deployment.md) (the `kubernetes` pool must exist).
+
+Stack: Ceph CSI (RBD), Helm · Target: namespace `ceph-csi-rbd` · Env: lab
 
 ## Prerequisites
-- Ceph pool with name `kubernetes` (already created via ansible)
 
-## Ceph Cluster Preparation
+- [ ] Ceph cluster deployed and healthy ([Ceph deployment](../deployment.md)); `ceph -s` works on an admin node
+- [ ] Ceph pool with name `kubernetes` (already created via ansible): `ceph osd pool ls | grep kubernetes`
+- [ ] `kubectl` access to the target cluster: `kubectl config current-context`
+- [ ] `helm` (or the GitOps repo below) to install the chart
 
-### 1. Setup Client Authentication
+## Steps
+
+### 1. Set up client authentication
 
 Create a dedicated Ceph user for Kubernetes with minimal required permissions:
 
@@ -27,7 +33,7 @@ Example output:
     key = AQD9o0Fd6hQRChAAt7fMaSZXduT3NWEqylNpmg==
 ```
 
-### 2. Verify Cluster Information
+### 2. Collect cluster information
 
 Collect the following information needed for CSI configuration:
 
@@ -42,9 +48,7 @@ ceph status
 ceph auth get client.kubernetes
 ```
 
-## Install Ceph CSI Driver
-
-### 1. Create Namespace
+### 3. Create the namespace
 
 Create a dedicated namespace for the CSI driver:
 
@@ -52,7 +56,7 @@ Create a dedicated namespace for the CSI driver:
 kubectl create namespace ceph-csi-rbd
 ```
 
-### 2. Install CSI Driver using Helm and Kustomize
+### 4. Install the CSI driver (Helm and Kustomize)
 
 Create a values file for the Helm chart:
 
@@ -90,24 +94,9 @@ nodeplugin:
 
 Alternative installation method using the referenced helm chart configuration [here](https://github.com/riupie/gitops-argocd/blob/main/overlays/development/ceph-csi-rbd/values.yaml)
 
-### 3. Verify Installation
+### 5. Provision a test volume
 
-Check that all CSI components are running:
-
-```bash
-# Check CSI pods
-kubectl get pods -n ceph-csi-rbd
-
-# Check CSI driver registration
-kubectl get csidrivers
-
-# Check storage class
-kubectl get storageclass
-```
-
-## Usage Examples
-
-### Basic PersistentVolumeClaim
+Basic PersistentVolumeClaim:
 
 ```yaml
 apiVersion: v1
@@ -123,7 +112,7 @@ spec:
   storageClassName: ceph-rbd
 ```
 
-### Pod Using Ceph RBD Volume
+Pod using the Ceph RBD volume:
 
 ```yaml
 apiVersion: v1
@@ -143,6 +132,27 @@ spec:
       claimName: rbd-pvc
       readOnly: false
 ```
+
+## Verify
+
+Check that all CSI components are running:
+
+```bash
+# Check CSI pods
+kubectl get pods -n ceph-csi-rbd
+
+# Check CSI driver registration
+kubectl get csidrivers
+
+# Check storage class
+kubectl get storageclass
+```
+
+> TODO: add the end-to-end check for step 5 (expected PVC `Bound` and pod `Running` output).
+
+## Troubleshooting
+
+> TODO: no troubleshooting content in the source. Add symptom / likely cause / fix rows (e.g. PVC `Pending`, CSI pods not ready).
 
 ## References
 

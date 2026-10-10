@@ -1,5 +1,7 @@
 # Ceph Storage Overview
 
+This page explains the lab's Ceph storage design (nodes, networks, pools, access methods) so the playbooks make sense. Read it before deploying with [Ceph deployment](deployment.md) or consuming from Kubernetes with [Kubernetes integration](integrations/kubernetes.md).
+
 ## Introduction
 
 This documentation covers the Ceph distributed storage system deployed in the infra-lab environment. Ceph provides a unified storage platform that delivers block, object, and file storage services with enterprise-grade reliability, scalability, and performance.

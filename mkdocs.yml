@@ -14,14 +14,15 @@ nav:
       - Prerequisites: docs/getting-started/prerequisites.md
       - Infrastructure Deployment: docs/getting-started/infrastructure-deployment.md
       - Kubernetes Setup: docs/getting-started/kubernetes-setup.md
-  - Storage:
-    - Overview: docs/storage/overview.md
-    - Deployment: docs/storage/deployment.md
-    - Integrations:
-      - Kubernetes: docs/storage/integrations/kubernetes.md
-  - External Services:
+  - Playbook:
+    - Ceph Storage:
+      - Overview: docs/playbooks/storage/overview.md
+      - Deployment: docs/playbooks/storage/deployment.md
+      - Kubernetes Integration: docs/playbooks/storage/integrations/kubernetes.md
     - BIND9 DNS:
-      - Deployment: docs/external-services/bind9/deployment.md
+      - Deployment: docs/playbooks/bind9/deployment.md
+    - AI Gateway:
+      - Keycloak OAuth for MCP (DCR): docs/playbooks/ai-gateway/agentgateway-keycloak-mcp-auth.md
 
 theme:
   name: material

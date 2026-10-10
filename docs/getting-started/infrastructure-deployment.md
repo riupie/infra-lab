@@ -328,5 +328,5 @@ Remove the saved plan files afterwards (`rm -f tfplan destroy.tfplan` in each di
 Once infrastructure deployment is complete:
 
 1. **[Kubernetes Setup](kubernetes-setup.md)** - Deploy k0s Kubernetes cluster
-2. **[Storage Configuration](../storage/deployment.md)** - Set up Ceph storage
+2. **[Storage Configuration](../playbooks/storage/deployment.md)** - Set up Ceph storage
 3. **Service Configuration** - Configure DNS, monitoring, and other services

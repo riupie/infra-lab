@@ -1,12 +1,14 @@
-# Ceph Deployment Guide
+# Deploy a Ceph cluster with Ansible
 
-## Overview
+This playbook builds the lab's shared storage (RBD block, S3 object) as a 3-node Ceph cluster, deployed with Ansible in phases for better control, debugging, and reliability.
 
-This guide provides step-by-step instructions for deploying a production-ready Ceph storage cluster using Ansible automation. The deployment follows a phased approach for better control, debugging, and reliability.
+Use it to build the cluster from scratch or rebuild it, once the VMs exist. To consume the cluster from Kubernetes, continue with [Kubernetes integration](integrations/kubernetes.md).
+
+Stack: Ansible 2.12+, cephadm, Podman · Target: `ceph01`, `ceph02`, `ceph03` (Debian 12) · Env: lab (`inventories/development`)
 
 ## Prerequisites
 
-### Infrastructure Requirements
+### Infrastructure
 
 | Component | Specification | Notes |
 |-----------|---------------|-------|
@@ -17,7 +19,7 @@ This guide provides step-by-step instructions for deploying a production-ready C
 | OSD Disk | 100GB per node (`/dev/vdb`) | Primary data storage |
 | DB/WAL Disk | 50GB per node (`/dev/vdc`) | Metadata and write-ahead logs |
 
-### Network Configuration
+### Network
 
 ```mermaid
 graph LR
@@ -50,9 +52,7 @@ graph LR
     Eth1_3 --- ClusterBridge
 ```
 
-### Software Prerequisites
-
-#### Control Node Requirements
+### Control node
 
 | Software | Version | Purpose |
 |----------|---------|---------|
@@ -61,7 +61,7 @@ graph LR
 | Collections | `ceph.automation`, `community.general`, `ansible.posix` | Ansible modules |
 | SSH Access | Key-based | Passwordless access to all nodes |
 
-#### Target System Requirements
+### Target systems
 
 | Component | Requirement |
 |-----------|-------------|
@@ -70,11 +70,11 @@ graph LR
 | Container Runtime | Podman |
 | Time Sync | chrony |
 
-## Pre-Deployment Setup
+## Steps
 
-### 1. Prepare Control Node
+The deployment follows a phased approach. Each `--tags` run below is one phase of `site.yaml`.
 
-#### Install Ansible and Dependencies
+### 1. Prepare the control node
 
 ```bash
 # Install Ansible and Python dependencies
@@ -87,9 +87,7 @@ ansible-galaxy install -r requirements.yaml
 ansible-galaxy collection list | grep -E "(ceph|community|ansible)"
 ```
 
-### 2. Pre-deployment Validation
-
-#### Test Ansible Connectivity
+### 2. Validate connectivity and infrastructure
 
 ```bash
 # Navigate to Ansible directory
@@ -110,8 +108,6 @@ ceph01 | SUCCESS => {
 }
 ```
 
-#### Validate Infrastructure
-
 ```bash
 # Verify disk layout on all nodes
 ansible all -i inventories/development/hosts.yaml -m shell -a "lsblk"
@@ -123,17 +119,12 @@ ansible all -i inventories/development/hosts.yaml -m shell -a "ip addr show"
 ansible all -i inventories/development/hosts.yaml -m shell -a "free -h && df -h"
 ```
 
-## Deployment Process
-The deployment follows a phased approach for reliability and debugging:
-
-### Phase 1: System Preparation
+### 3. System preparation
 
 ```bash
 # Configure system prerequisites and repositories
 ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags preflight
 ```
-
-#### What Phase 1 Accomplishes
 
 | Task | Description |
 |------|-------------|
@@ -144,7 +135,7 @@ ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags prefligh
 | Base Packages | Installs cephadm, firewalld, and dependencies |
 | Network Config | Prepares firewall rules for Ceph services |
 
-#### Verification
+Check the phase:
 
 ```bash
 # Verify time synchronization
@@ -157,7 +148,7 @@ ansible all -i inventories/development/hosts.yaml -m shell -a "podman --version"
 !!! note
     Recommended: Use local NTP server for production environment
 
-### Phase 2: Cluster Bootstrap
+### 4. Bootstrap the cluster
 
 ```bash
 # Initialize the Ceph cluster on the admin node
@@ -175,8 +166,6 @@ ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags bootstra
     # fsid: 47c6b1da-6271-43a2-9e52-50183ee3fa7e
     ```
 
-#### Bootstrap Process
-
 | Step | Action | Details |
 |------|--------|---------|
 | 1. Cluster Init | Initialize cluster on ceph01 | FSID: `47c6b1da-6271-43a2-9e52-50183ee3fa7e` |
@@ -184,7 +173,7 @@ ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags bootstra
 | 3. Dashboard Setup | Enable management dashboard | HTTPS on port 8443 with admin user |
 | 4. Base Config | Apply cluster-wide settings | Performance tuning and security |
 
-#### Verification
+Check the phase:
 
 ```bash
 # Check initial cluster status
@@ -204,7 +193,7 @@ services:
 !!! note
     `HEALTH_WARN` is expected at this stage as additional services are not yet deployed.
 
-### Phase 3: Cluster Expansion
+### 5. Expand the cluster
 
 ```bash
 # Distribute cephadm SSH keys between nodes and add all nodes to cluster with appropriate labels
@@ -217,9 +206,8 @@ ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags add_node
     - ceph02: `mon`, `mgr`, `osd`, `rgw`
     - ceph03: `mon`, `mgr`, `osd`, `rgw`
 
-### Phase 4: Service Deployment
+### 6. Deploy core services
 
-#### Step 4.1: Core Services
 ```bash
 # Deploy MON, MGR, and RGW services
 ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags deploy_services --ask-vault-pass
@@ -231,7 +219,8 @@ ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags deploy_s
     - 3x MGR: Cluster management and dashboard
     - 3x RGW: Object storage gateway
 
-#### Step 4.2: OSD Deployment
+### 7. Deploy OSDs
+
 ```bash
 # Configure and deploy Object Storage Daemons
 ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags configure_osds --ask-vault-pass
@@ -242,7 +231,7 @@ ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags configur
     - DB Device: `/dev/vdc` (50GB per node)
     - Total OSDs: 6 (2 per node)
 
-### Phase 5: Storage Configuration
+### 8. Configure storage pools
 
 ```bash
 # Create storage pools for different use cases
@@ -254,26 +243,40 @@ ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags configur
     - rbd_ec
     - data pool for RGW
 
-## Complete Deployment
+!!! tip "Single command deployment"
+    For experienced users or automated deployments, steps 3-8 run in one go:
 
-### Single Command Deployment
+    ```bash
+    # Deploy entire cluster in one run
+    ansible-playbook -i inventories/development/hosts.yaml site.yaml --ask-vault-pass
 
-For experienced users or automated deployments:
+    # Deploy with verbose output for troubleshooting
+    ansible-playbook -i inventories/development/hosts.yaml site.yaml --ask-vault-pass -v
+    ```
+
+    Recommended: use the phased deployment for first-time deployments or troubleshooting.
+
+### 9. Secure the dashboard
+
+| Setting | Value |
+|---------|-------|
+| URL | https://192.168.10.20:8443 |
+| Username | `admin` |
+| Password | (configured in Ansible vault) |
+| Certificate | Self-signed (accept browser warning) |
 
 ```bash
-# Deploy entire cluster in one run
-ansible-playbook -i inventories/development/hosts.yaml site.yaml --ask-vault-pass
+# Change default dashboard password
+ceph dashboard ac-user-set-password admin <new-password>
 
-# Deploy with verbose output for troubleshooting
-ansible-playbook -i inventories/development/hosts.yaml site.yaml --ask-vault-pass -v
+# Enable SSL certificate (optional)
+ceph dashboard set-ssl-certificate -i /path/to/certificate.crt
+ceph dashboard set-ssl-certificate-key -i /path/to/private.key
 ```
 
-!!! note
-    Recommended: Use phased deployment for first-time deployments or troubleshooting.
+## Verify
 
-## Deployment Verification
-
-### Cluster Health Check
+### Cluster health
 
 ```bash
 # Basic health verification
@@ -299,7 +302,7 @@ data:
   pgs:     193 active+clean
 ```
 
-### Service Status Verification
+### Service status
 
 ```bash
 # Check all deployed services
@@ -309,7 +312,7 @@ ansible admin -i inventories/development/hosts.yaml -b -m shell -a "ceph orch ps
 ansible admin -i inventories/development/hosts.yaml -b -m shell -a "ceph orch ls"
 ```
 
-### Storage Pool Verification
+### Storage pools
 
 ```bash
 # List all pools with details
@@ -322,31 +325,11 @@ ansible admin -i inventories/development/hosts.yaml -b -m shell -a "ceph df"
 ansible admin -i inventories/development/hosts.yaml -b -m shell -a "ceph osd tree"
 ```
 
-## Post-Deployment Configuration
+## Troubleshooting
 
-### Dashboard Access
+> TODO: no troubleshooting content in the source. Add symptom / likely cause / fix rows (the phased `--tags` runs and `-v` are the current debugging aids).
 
-| Setting | Value |
-|---------|-------|
-| URL | https://192.168.10.20:8443 |
-| Username | `admin` |
-| Password | (configured in Ansible vault) |
-| Certificate | Self-signed (accept browser warning) |
+## References
 
-### Security Considerations
-
-```bash
-# Change default dashboard password
-ceph dashboard ac-user-set-password admin <new-password>
-
-# Enable SSL certificate (optional)
-ceph dashboard set-ssl-certificate -i /path/to/certificate.crt
-ceph dashboard set-ssl-certificate-key -i /path/to/private.key
-```
-
-## Next Steps
-
-After successful deployment:
-
-1. [Configure Kubernetes Integration](integrations/kubernetes.md) - Set up CSI driver for dynamic provisioning
-2. Create S3 Users - Configure object storage access
+- Next: [Configure Kubernetes integration](integrations/kubernetes.md), which sets up the CSI driver for dynamic provisioning.
+- Next: create S3 users to configure object storage access.

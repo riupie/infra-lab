@@ -1,21 +1,21 @@
-# BIND9 Deployment Guide
+# Deploy BIND9 DNS on bastion01
 
-## Overview
+This playbook provides authoritative DNS for the `lab.riupie.com` zone plus recursive resolution for the lab, with TSIG-secured dynamic updates so External-DNS can register records from Kubernetes.
 
-This guide provides step-by-step instructions for deploying BIND9 DNS server on the bastion host (bastion01) using Docker Compose. The deployment includes configuration setup, TSIG key generation, and integration with the lab infrastructure.
+Use it to set up (or rebuild) the lab DNS server on the bastion host, before configuring External-DNS in Kubernetes (step 10 produces its TSIG key).
+
+Stack: BIND9 9.20, Docker Compose · Target: `bastion01` (`192.168.10.9`) · Env: lab
 
 ## Prerequisites
-
-### System Requirements
 
 | Component | Requirement | Verification Command |
 |-----------|-------------|---------------------|
 | **Docker** | 20.10+ | `docker --version` |
 | **Docker Compose** | 2.0+ | `docker compose version` |
 
-## Configuration Deployment
+## Steps
 
-### Step 1: Prepare Deployment Directory
+### 1. Prepare the deployment directory
 
 ```bash
 # Create BIND9 deployment directory
@@ -29,7 +29,7 @@ su - cloud
 cd /opt/bind9
 ```
 
-### Step 2: Generate TSIG Key
+### 2. Generate the TSIG key
 
 ```bash
 # Generate authentication key for dynamic DNS updates
@@ -48,9 +48,9 @@ cat config/keys/external-dns.key
 !!! warning "Key Security"
     Store the generated key securely. This key will be used by External-DNS for dynamic updates.
 
-### Step 3: Create Configuration Files
+### 3. Create configuration files
 
-#### Main Configuration
+#### Main configuration
 
 ```bash
 cat > config/named.conf << 'EOF'
@@ -59,7 +59,7 @@ include "/etc/bind/named.conf.local";
 EOF
 ```
 
-#### Server Options
+#### Server options
 
 ```bash
 cat > config/named.conf.options << 'EOF'
@@ -105,7 +105,7 @@ logging {
 EOF
 ```
 
-#### Zone Configuration
+#### Zone configuration
 
 ```bash
 cat > config/named.conf.local << 'EOF'
@@ -122,7 +122,7 @@ zone "lab.riupie.com" {
 EOF
 ```
 
-### Step 3: Create Zone File
+### 4. Create the zone file
 
 ```bash
 # Create initial zone file with current date as serial
@@ -143,7 +143,7 @@ ns1.lab.riupie.com.     A       192.168.10.9
 EOF
 ```
 
-### Step 4: Create Docker Compose File
+### 5. Create the Docker Compose file
 
 ```bash
 cat > docker-compose.yaml << 'EOF'
@@ -170,9 +170,7 @@ services:
 EOF
 ```
 
-## Configuration Validation
-
-### Step 1: Validate Configuration Files
+### 6. Validate the configuration files
 
 ```bash
 # Check BIND configuration syntax
@@ -184,7 +182,7 @@ EOF
 # Expected output: (no output means configuration is valid)
 ```
 
-### Step 2: Validate Zone File
+### 7. Validate the zone file
 
 ```bash
 # Check zone file syntax
@@ -199,9 +197,7 @@ docker run --rm \
 # OK
 ```
 
-## Service Deployment
-
-### Step 1: Start BIND9 Service
+### 8. Start the BIND9 service
 
 ```bash
 # Start the DNS server
@@ -215,7 +211,7 @@ docker compose ps
 # bind9     internetsystemsconsortium/bind9:9.20    "/usr/sbin/named"   bind9     2 seconds ago   Up 1 second (healthy)   0.0.0.0:53->53/tcp, 0.0.0.0:53->53/udp
 ```
 
-### Step 2: Monitor Startup Logs
+### 9. Monitor startup logs
 
 ```bash
 # Check container logs
@@ -227,7 +223,22 @@ docker compose logs -f bind9
 # bind9  | running
 ```
 
-### Step 3: Test DNS Resolution
+### 10. Extract the TSIG key for External-DNS
+
+```bash
+# On bastion01, extract the TSIG key secret
+cd /opt/bind9
+grep secret config/keys/external-dns.key
+
+# Output format:
+# secret "base64-encoded-key-here==";
+
+# Copy this key for External-DNS configuration in Kubernetes
+```
+
+## Verify
+
+### DNS resolution
 
 ```bash
 # Test internal zone resolution
@@ -243,22 +254,7 @@ dig @localhost google.com A
 # Should return Google's IP addresses
 ```
 
-## Dynamic DNS Integration
-
-### Step 1: Extract TSIG Key for External-DNS
-
-```bash
-# On bastion01, extract the TSIG key secret
-cd /opt/bind9
-grep secret config/keys/external-dns.key
-
-# Output format:
-# secret "base64-encoded-key-here==";
-
-# Copy this key for External-DNS configuration in Kubernetes
-```
-
-### Step 2: Test Dynamic DNS Updates
+### Dynamic DNS updates
 
 ```bash
 # Create a test update file
@@ -276,8 +272,12 @@ nsupdate -k config/keys/external-dns.key < test-update.txt
 dig @192.168.10.9 test.lab.riupie.com A
 ```
 
-## Troubleshooting Common Issues
-On Debian-based systems, systemd-resolved may conflict with BIND9. You can resolve this by pointing systemd-resolved to your BIND9 server.
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| BIND9 cannot bind port 53 (Debian-based hosts) | `systemd-resolved` stub listener conflicts with BIND9 | Point `systemd-resolved` at the BIND9 server and disable the stub listener (below) |
+
 Edit `/etc/systemd/resolved.conf`:
 
 ```bash
