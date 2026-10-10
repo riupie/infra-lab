@@ -212,7 +212,7 @@ The VM stack reads the pool and network outputs from the other two states, so st
 
 | VM Name | Role | vCPUs | Memory | System disk | Extra disks | IP address(es) |
 |---------|------|-------|--------|-------------|-------------|----------------|
-| **bastion01** | DNS + Tailscale Router | 1 | 2GB | 20GB | n/a | 192.168.10.9 |
+| **general01** | DNS + Tailscale Router | 1 | 2GB | 20GB | n/a | 192.168.10.9 |
 | **master01** | Kubernetes Control Plane | 2 | 4GB | 50GB | n/a | 192.168.10.10 |
 | **worker01** | Kubernetes Worker | 4 | 8GB | 100GB | n/a | 192.168.10.11 |
 | **worker02** | Kubernetes Worker | 4 | 8GB | 100GB | n/a | 192.168.10.12 |
@@ -244,7 +244,7 @@ virsh list --all
 ```text
  Id   Name        State
 --------------------------
- 1    bastion01   running
+ 1    general01   running
  2    master01    running
  3    worker01    running
  4    worker02    running
@@ -269,14 +269,14 @@ Every address should print `up`.
 
 ```bash
 # After the VMs have fully booted (usually 1 to 2 minutes)
-ssh cloud@192.168.10.9    # bastion01
+ssh cloud@192.168.10.9    # general01
 ssh cloud@192.168.10.10   # master01
 ```
 
 If SSH fails, the VMs may still be booting. Check the console (exit with `Ctrl+]`):
 
 ```bash
-virsh console bastion01
+virsh console general01
 ```
 
 If it still fails, confirm you replaced `ssh_keys` with your own public key.

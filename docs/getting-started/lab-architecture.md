@@ -39,7 +39,7 @@ The lab environment consists of 5 virtual machines, each serving specific roles 
 
 | VM ID | Hostname | Status | Role | IP Address | Interface | Resources |
 |-------|----------|--------|------|------------|-----------|-----------|
-| 2 | **bastion01** | Running | DNS Server + Tailscale Router | `192.168.10.15` | vnet4 | 2 vCPU, 4GB RAM |
+| 2 | **general01** | Running | DNS Server + Tailscale Router | `192.168.10.9` | vnet4 | 2 vCPU, 4GB RAM |
 | 3 | **master01** | Running | Kubernetes Control Plane | `192.168.10.10` | vnet5 | 2 vCPU, 4GB RAM |
 | 4 | **worker01** | Running | Kubernetes Worker Node | `192.168.10.11` | vnet6 | 2 vCPU, 8GB RAM |
 | 5 | **worker02** | Running | Kubernetes Worker Node | `192.168.10.12` | vnet7 | 2 vCPU, 8GB RAM |
@@ -49,7 +49,7 @@ The lab environment consists of 5 virtual machines, each serving specific roles 
 
 - **Internal Communication**: All VMs connected via `virbr1` bridge (192.168.10.0/24)
 - **External Access**: NAT through host machine
-- **Service Discovery**: Internal DNS provided by bastion01
+- **Service Discovery**: Internal DNS provided by general01
 - **Remote Access**: Tailscale subnet routing for external connectivity
 
 ---
@@ -82,7 +82,7 @@ Inbound      | LAN → VMs     | VM IPs        | ❌ Blocked (NAT)
 
 ## Infrastructure Services
 
-### Bastion Host (bastion01)
+### Bastion Host (general01)
 
 The bastion host provides critical infrastructure services for the lab environment:
 
