@@ -67,6 +67,8 @@ Current libvirt uses **modular daemons**: one per driver (`virtqemud` for VMs, `
 for drv in qemu network storage nodedev nwfilter secret interface proxy; do
   sudo systemctl enable --now virt${drv}d.socket virt${drv}d-ro.socket virt${drv}d-admin.socket
 done
+# VM logging and disk locking, used by virtqemud (these have no -ro socket)
+sudo systemctl enable --now virtlogd.socket virtlogd-admin.socket virtlockd.socket virtlockd-admin.socket
 ```
 
 !!! warning "Host where `libvirtd` is still enabled"
@@ -81,6 +83,8 @@ done
     sudo systemctl disable --now libvirtd.service libvirtd.socket libvirtd-ro.socket libvirtd-admin.socket
     # then re-run the loop above
     ```
+
+    The disable also removes the boot links for `virtlogd` and `virtlockd` (`libvirtd.service` lists them under `Also=`). Running the loop above, including its last line, restores them.
 
 ### Allow your user to use the system connection
 
