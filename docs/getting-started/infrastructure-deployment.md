@@ -8,9 +8,9 @@ This guide walks through the automated deployment of virtual infrastructure usin
 
 | Component | Description | Configuration |
 |-----------|-------------|---------------|
-| **Virtual Networks** | Two libvirt NAT networks | `net-lab` 192.168.10.0/24 and `ceph-lab` 192.168.11.0/24 (libvirt assigns the `virbrN` bridge names) |
+| **Virtual Network** | One libvirt NAT network | `net-lab` 192.168.10.0/24 (libvirt assigns the `virbrN` bridge name; `virbr1` on the reference host) |
 | **Storage Pool** | Disk storage for VM images | `/var/lib/libvirt/images/` |
-| **Virtual Machines** | 7 VMs for the lab environment | 1 bastion + 1 control plane + 2 workers + 3 Ceph nodes |
+| **Virtual Machines** | 3 VMs | general01 (DNS, Keycloak) + master01 (control plane) + worker01 (worker) |
 
 ## Prerequisites
 
@@ -79,13 +79,13 @@ tofu plan -out=tfplan
 tofu apply tfplan
 ```
 
-The plan must show **2 to add, 0 to change, 0 to destroy** (`net-lab` and `ceph-lab`). Stop and investigate anything else.
+The plan must show **1 to add, 0 to change, 0 to destroy** (`net-lab`). Stop and investigate anything else.
 
 **What this creates:**
 
-- Two libvirt networks with NAT and autostart: `net-lab` (`192.168.10.0/24`) and `ceph-lab` (`192.168.11.0/24`)
-- A bridge for each (typically `virbr1` and `virbr2`; libvirt picks the numbers)
-- Gateways `192.168.10.1` and `192.168.11.1`
+- One libvirt network with NAT and autostart: `net-lab` (`192.168.10.0/24`)
+- A bridge for it (typically `virbr1`; libvirt picks the number)
+- Gateway and DNS forwarder `192.168.10.1`
 
 ### Verify Network Creation
 
@@ -100,11 +100,10 @@ virsh net-dumpxml net-lab
 Expected `virsh net-list`:
 
 ```text
- Name       State    Autostart   Persistent
----------------------------------------------
- ceph-lab   active   yes         yes
- default    active   yes         yes
- net-lab    active   yes         yes
+ Name      State    Autostart   Persistent
+--------------------------------------------
+ default   active   yes         yes
+ net-lab   active   yes         yes
 ```
 
 ## Storage Deployment
@@ -125,8 +124,8 @@ tofu apply tfplan
 
 - A libvirt storage pool named `default` at `/var/lib/libvirt/images/`
 - Two base images downloaded into that pool (this can take several minutes and a few GB of disk):
-    - `debian12` from the Debian 12 `genericcloud` image (`latest`)
-    - `rocky9` from the Rocky 9 `GenericCloud-Base` image (`latest`)
+    - `debian12` from the Debian 12 `genericcloud` image (`latest`), used by all VMs
+    - `rocky9` from the Rocky 9 `GenericCloud-Base` image (`latest`), still defined in `storage-pool/main.tf` but not used by any current VM
 
 The image URLs point at `latest`, so contents drift over time. For repeatable builds, pin a dated image URL in `storage-pool/main.tf`.
 
@@ -190,7 +189,7 @@ Expected `virsh pool-list`:
 
 ### Step 3: Deploy VMs
 
-Before applying, edit `jarvis-kvm/terraform/vm/main.tf` and replace the `ssh_keys` entry of **every** module (`bastion`, `kube_master`, `kube_worker`, `ceph`) with your own public key (`cat ~/.ssh/id_ed25519.pub`). The repository contains the author's key, so SSH will fail for you otherwise.
+Before applying, edit `jarvis-kvm/terraform/vm/main.tf` and replace the `ssh_keys` entry of **every** module (`general`, `kube_master`, `kube_worker`) with your own public key (`cat ~/.ssh/id_ed25519.pub`). The repository contains the author's key, so SSH will fail for you otherwise.
 
 ```bash
 # Navigate to VM configuration
@@ -212,15 +211,11 @@ The VM stack reads the pool and network outputs from the other two states, so st
 
 | VM Name | Role | vCPUs | Memory | System disk | Extra disks | IP address(es) |
 |---------|------|-------|--------|-------------|-------------|----------------|
-| **general01** | DNS + Tailscale Router | 1 | 2GB | 20GB | n/a | 192.168.10.9 |
+| **general01** | DNS (BIND9) + Keycloak | 1 | 2GB | 20GB | n/a | 192.168.10.9 |
 | **master01** | Kubernetes Control Plane | 2 | 4GB | 50GB | n/a | 192.168.10.10 |
-| **worker01** | Kubernetes Worker | 4 | 8GB | 100GB | n/a | 192.168.10.11 |
-| **worker02** | Kubernetes Worker | 4 | 8GB | 100GB | n/a | 192.168.10.12 |
-| **ceph01** | Ceph node | 2 | 8GB | 50GB | 100GB (`ceph-osd`) + 50GB (`ceph-db`) | 192.168.10.20 / 192.168.11.20 |
-| **ceph02** | Ceph node | 2 | 8GB | 50GB | 100GB + 50GB | 192.168.10.21 / 192.168.11.21 |
-| **ceph03** | Ceph node | 2 | 8GB | 50GB | 100GB + 50GB | 192.168.10.22 / 192.168.11.22 |
+| **worker01** | Kubernetes Worker | 2 | 8GB | 50GB | n/a | 192.168.10.11 |
 
-Bastion, master and workers use the Debian 12 image; the Ceph nodes use Rocky 9. Values come from `jarvis-kvm/terraform/vm/main.tf`; if you change them there, update your expectations accordingly.
+All VMs use the Debian 12 image. Values come from `jarvis-kvm/terraform/vm/main.tf`; if you change them there, update your expectations accordingly.
 
 ### Deployment Process
 
@@ -228,7 +223,7 @@ The VM deployment will:
 
 1. **Create VM Disks**: Individual disk images for each VM, backed by the base images
 2. **Configure Cloud-Init**: User accounts and SSH keys
-3. **Network Assignment**: Static IP addresses in the lab networks
+3. **Network Assignment**: Static IP addresses in `net-lab`
 4. **Start VMs**: Boot all virtual machines
 
 ## Verification
@@ -247,10 +242,6 @@ virsh list --all
  1    general01   running
  2    master01    running
  3    worker01    running
- 4    worker02    running
- 5    ceph01      running
- 6    ceph02      running
- 7    ceph03      running
 ```
 
 IDs and ordering will differ.
@@ -258,7 +249,7 @@ IDs and ordering will differ.
 #### Test Network Connectivity
 
 ```bash
-for ip in 192.168.10.{9,10,11,12,20,21,22}; do
+for ip in 192.168.10.{9,10,11}; do
   ping -c 2 -W 2 "$ip" >/dev/null && echo "$ip up" || echo "$ip DOWN"
 done
 ```
@@ -293,7 +284,7 @@ If it still fails, confirm you replaced `ssh_keys` with your own public key.
 
 ## Cleanup
 
-⚠ WARNING: Destructive operation. This removes all lab VMs, their disks (including the Ceph data disks), the networks and the base images. Review each plan before applying it.
+⚠ WARNING: Destructive operation. This removes all lab VMs, their disks, the network and the base images. Review each plan before applying it.
 
 Tear down in reverse order, using a saved destroy plan each time:
 
@@ -328,4 +319,4 @@ Remove the saved plan files afterwards (`rm -f tfplan destroy.tfplan` in each di
 Once infrastructure deployment is complete:
 
 1. **[Kubernetes Setup](kubernetes-setup.md)** - Deploy k0s Kubernetes cluster
-2. **Service Configuration** - Configure DNS, monitoring, and other services
+2. **[Set Up Dynamic DNS](../playbooks/dynamic-dns.md)** - BIND9 on general01 for the `lab.riupie.com` zone

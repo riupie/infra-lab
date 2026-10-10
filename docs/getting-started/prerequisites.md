@@ -11,26 +11,25 @@ This document outlines the system requirements and software prerequisites needed
 
 | Component | Version |
 |-----------|---------|
-| Host OS | Rocky Linux 9 (also run on Fedora; see the libvirt daemon note below) |
-| OpenTofu | 1.7 or newer (state encryption requires 1.7+). Run `tofu version` and record yours |
+| Host OS | Fedora 44 (other RHEL-family hosts work; see the libvirt daemon note below) |
+| libvirt | 12.0 (Fedora 44 package) |
+| OpenTofu | 1.11.5; 1.7 or newer is required for state encryption |
 | libvirt provider | `dmacvicar/libvirt` 0.8.3 (pinned in `providers.tf`) |
-| VM images | Debian 12 (bookworm) and Rocky Linux 9 GenericCloud, downloaded as `latest` |
+| VM images | Debian 12 (bookworm) GenericCloud, downloaded as `latest` |
 
 ## System Requirements
 
 ### Minimum Requirements
 
-The full lab runs 7 VMs: bastion, 1 control plane, 2 workers and 3 Ceph nodes (about 46 GB of VM RAM in total). The Ceph nodes carry 3 × 150 GB of extra disks. Qcow2 volumes are thin-provisioned, but plan for the full size.
+The lab runs 3 VMs (general01, master01, worker01): 5 vCPUs, 14 GB of VM RAM and about 120 GB of disk in total. Qcow2 volumes are thin-provisioned, but plan for the full size.
 
 | Component | Minimum | Recommended | Notes |
 |-----------|---------|-------------|-------|
-| **CPU** | 8 cores | 16+ cores | Must support virtualization (VT-x/AMD-V) |
-| **Memory** | 64GB | 96GB+ | VMs use ~46GB; the rest is host overhead and page cache |
-| **Storage** | 600GB | 1TB+ | SSD/NVMe strongly recommended (Ceph + 7 OS disks) |
-| **Network** | Any | Any | Lab traffic stays on libvirt NAT networks; internet is needed to download images |
-| **OS** | RHEL-based Linux (RHEL, Rocky, AlmaLinux, Fedora) | Rocky Linux 9 / RHEL 9 | Red Hat based distributions |
-
-Running only the Kubernetes part (bastion, master, workers; ~26GB RAM, ~370GB disk) is possible by removing the `ceph` module from `jarvis-kvm/terraform/vm/main.tf`.
+| **CPU** | 4 cores | 8+ cores | Must support virtualization (VT-x/AMD-V) |
+| **Memory** | 24GB | 32GB+ | VMs use 14GB; the rest is host overhead and page cache |
+| **Storage** | 150GB | 250GB+ | SSD/NVMe recommended |
+| **Network** | Any | Any | Lab traffic stays on the libvirt NAT network; internet is needed to download images |
+| **OS** | RHEL-family Linux (Fedora, RHEL, Rocky, AlmaLinux) | Fedora 44 | The tested host |
 
 ### Virtualization Support
 
@@ -74,7 +73,7 @@ sudo usermod -aG libvirt "$USER"
 ```
 
 !!! note "libvirt daemon on newer distributions"
-    Newer Fedora and RHEL-family releases use modular daemons (`virtqemud`, `virtnetworkd`, `virtstoraged`) instead of the monolithic `libvirtd`. Check what your host provides with `systemctl list-unit-files 'virt*d*'`. This guide is written against Rocky Linux 9, where `libvirtd` is correct. If `libvirtd` is missing on your host, enable the modular sockets instead (`sudo systemctl enable --now virtqemud.socket virtnetworkd.socket virtstoraged.socket`) and use `systemctl status virtqemud` in the verification steps.
+    Newer Fedora and RHEL-family releases use modular daemons (`virtqemud`, `virtnetworkd`, `virtstoraged`) instead of the monolithic `libvirtd`. Check what your host provides with `systemctl list-unit-files 'virt*d*'`. On the tested Fedora 44 host `libvirtd` is enabled and active. If `libvirtd` is missing on your host, enable the modular sockets instead (`sudo systemctl enable --now virtqemud.socket virtnetworkd.socket virtstoraged.socket`) and use `systemctl status virtqemud` in the verification steps.
 
 Non-root users default to the per-user session (`qemu:///session`) connection. To make `virsh` use the system connection without `sudo`, set `LIBVIRT_DEFAULT_URI` and persist it in `.bashrc`/`.zshrc` (depends on your shell). The OpenTofu providers in this repo already use `qemu:///system` explicitly.
 
@@ -88,7 +87,7 @@ virsh list --all
 
 ### Install OpenTofu
 
-OpenTofu is used for infrastructure automation and VM provisioning. It is not in the default Rocky or Fedora repositories, so add the official OpenTofu repository first. Follow the [OpenTofu RPM installation instructions](https://opentofu.org/docs/intro/install/rpm/) for your distribution, then:
+OpenTofu is used for infrastructure automation and VM provisioning. It is not in the default Fedora or Rocky repositories, so add the official OpenTofu repository first. Follow the [OpenTofu RPM installation instructions](https://opentofu.org/docs/intro/install/rpm/) for your distribution, then:
 
 ```bash
 sudo dnf install -y tofu

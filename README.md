@@ -13,10 +13,10 @@ Every step of the process—from planning and designing the cluster architecture
 ├── docs
 │   ├── assets
 │   ├── getting-started
-│   ├── storage
+│   ├── playbooks
 │   └── stylesheets
 ├── jarvis-kvm
-│   ├── ansible
+│   ├── ansible        # Ceph playbooks (obsolete)
 │   └── terraform
 ├── k0s
 │   └── k0sctl.yaml
@@ -56,19 +56,14 @@ The following picture shows the high level components of opensource solutions us
         <td>Automate OS initial installation</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://ceph.io/assets/favicons/android-chrome-192x192.png"></td>
-        <td><a href="https://ceph.io/">Ceph</a></td>
-        <td>Distributed Storage</td>
-    </tr>
-    <tr>
         <td><img width="32" src="https://landscape.cncf.io/logos/f26381b645b2f14293a2a597bc98b5bbe1e5e086029de41830ba7c667353bf3e.svg"></td>
         <td><a href="https://containerd.io/">Containerd</a></td>
         <td>Container runtime integrated with K0S</td>
     </tr>
     <tr>
-        <td><img width="60" src="https://www.tigera.io/app/uploads/2021/07/calico_logo_white.svg" alt="cilium logo"></td>
+        <td><img width="60" src="https://www.tigera.io/app/uploads/2021/07/calico_logo_white.svg" alt="calico logo"></td>
         <td><a href="https://www.tigera.io/project-calico">Calico</a></td>
-        <td>Kubernetes Networking (CNI) and Load Balancer</td>
+        <td>Kubernetes Networking (CNI)</td>
     </tr>
     <tr>
         <td><img width="32" src="https://coredns.io/images/CoreDNS_Colour_Horizontal.png"></td>
@@ -78,7 +73,12 @@ The following picture shows the high level components of opensource solutions us
     <tr>
         <td><img width="32" src="https://www.debian.org/Pics/openlogo-50.png"></td>
         <td><a href="https://debian.org/">Debian</a></td>
-        <td>Cluster nodes OS & Host OS</td>
+        <td>VM OS (cluster nodes and general01)</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://fedoraproject.org/favicon.ico"></td>
+        <td><a href="https://fedoraproject.org/">Fedora</a></td>
+        <td>KVM host OS</td>
     </tr>
     <tr>
         <td><img width="32" src="https://kubernetes-sigs.github.io/external-dns/v0.15.0/docs/img/external-dns.png" alt="external-dns logo"></td>

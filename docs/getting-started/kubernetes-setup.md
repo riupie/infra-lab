@@ -1,154 +1,157 @@
 # Kubernetes Setup
-## Overview
 
-This guide covers the installation and configuration of a Kubernetes cluster using k0s, a lightweight and CNCF-certified Kubernetes distribution. The setup uses k0sctl for cluster lifecycle management and provides a minimal lab environment: one control plane node and one worker node.
+This guide installs a minimal k0s cluster (`lab-cluster`) on master01 and worker01 with k0sctl, then hands the cluster over to Flux, which installs every add-on from [`riupie/gitops-fluxcd`](https://github.com/riupie/gitops-fluxcd).
+
+Stack: k0s `v1.36.4+k0s.1`, k0sctl `v0.33.1`, Calico, flux-operator `0.61.0` (Flux 2.x) · Target: master01 (`192.168.10.10`, controller), worker01 (`192.168.10.11`, worker) · Run from: the Fedora 44 host · Env: lab
 
 ## Prerequisites
 
-Before proceeding, ensure you have completed:
+- [ ] [Prerequisites](prerequisites.md) and [Infrastructure Deployment](infrastructure-deployment.md) completed
+- [ ] VMs running and reachable over SSH as `cloud` (the `ssh_admin` user created by the VM module):
 
-1. **[Prerequisites](prerequisites.md)** - System requirements and software installation
-2. **[Infrastructure Deployment](infrastructure-deployment.md)** - VM and network setup
+    ```bash
+    virsh list
+    ssh cloud@192.168.10.10 "hostname && uptime"
+    ssh cloud@192.168.10.11 "hostname && uptime"
+    ```
 
-### Verify Infrastructure
+- [ ] `kubectl` installed on the host: `kubectl version --client`
 
-```bash
-# Verify all VMs are running
-virsh list
+## Steps
 
-# Test connectivity to all nodes
-ping -c 2 192.168.10.9   # bastion (general01)
-ping -c 2 192.168.10.10  # master01
-ping -c 2 192.168.10.11  # worker01
+### 1. Install k0sctl
 
-# Test SSH access (user must match the `user` fields in k0sctl.yaml)
-ssh <user>@192.168.10.10 "hostname && uptime"
-ssh <user>@192.168.10.11 "hostname && uptime"
-```
-
-## k0sctl Installation (from Bastion)
-
-### Install k0sctl
-
-k0sctl is the command-line tool for managing k0s Kubernetes clusters.
+*On the host.* Download the release binary and verify its checksum:
 
 ```bash
-# Method 1: Download the release binary and verify its checksum (recommended)
 K0SCTL_VERSION=v0.33.1
 mkdir -p /tmp/k0sctl && cd /tmp/k0sctl
 curl -fsSLO https://github.com/k0sproject/k0sctl/releases/download/${K0SCTL_VERSION}/k0sctl-linux-amd64
 curl -fsSLO https://github.com/k0sproject/k0sctl/releases/download/${K0SCTL_VERSION}/checksums.txt
 sha256sum --check --ignore-missing checksums.txt
 sudo install -m 0755 k0sctl-linux-amd64 /usr/local/bin/k0sctl
-
-# Method 2: Using Go (requires a Go toolchain)
-go install github.com/k0sproject/k0sctl@${K0SCTL_VERSION}
-
-# Verify installation
 k0sctl version
 ```
 
-> **Note:** `https://get.k0s.sh` installs the `k0s` binary, not `k0sctl`. k0sctl only needs to be installed on the bastion; k0s itself is deployed to the nodes by `k0sctl apply`.
+!!! note
+    `https://get.k0s.sh` installs the `k0s` binary, not `k0sctl`. k0sctl only runs on the host; it installs k0s on the nodes over SSH.
 
-## Cluster Configuration
+### 2. Review the cluster configuration
 
-### Download Configuration
+The configuration is [`k0s/k0sctl.yaml`](https://github.com/riupie/infra-lab/blob/main/k0s/k0sctl.yaml) in this repo:
 
-```bash
-# Download the k0sctl configuration
-wget https://raw.githubusercontent.com/riupie/infra-lab/refs/heads/main/k0s/k0sctl.yaml
+| Setting | Value |
+|---|---|
+| Controller | master01 `192.168.10.10` (control plane only; it does not appear in `kubectl get nodes`) |
+| Worker | worker01 `192.168.10.11` |
+| SSH user | `cloud` |
+| CNI | Calico |
+| kube-proxy | IPVS with `strictARP: true` (required by MetalLB L2) |
+| Helm extension | `flux-operator` chart `0.61.0` in `flux-system`; nothing else |
 
-# Review the configuration
-cat k0sctl.yaml
-```
+### 3. Deploy the cluster
 
-### Configuration Overview
-
-The k0sctl configuration defines:
-
-| Component | Node | IP Address | Role |
-|-----------|------|------------|------|
-| **Control Plane** | master01 | 192.168.10.10 | Controller |
-| **Worker Node** | worker01 | 192.168.10.11 | Worker |
-
-The cluster uses Calico as CNI, kube-proxy in IPVS mode (`strictARP: true`) and installs the MetalLB Helm chart through the k0s Helm extension. The controller runs only the control plane, so it does not appear in `kubectl get nodes`.
-
-> **Note:** `k0s/k0sctl.yaml` connects as user `cloud`, while the Terraform VM modules create the admin user `debian`. Set the `user` fields in `k0sctl.yaml` to the account that exists on your VMs and that your SSH key is authorized for.
-
-## Cluster Deployment
-
-### Deploy the Cluster
+*On the host, from the repo root:*
 
 ```bash
-# Apply the cluster configuration
-k0sctl apply --config k0sctl.yaml
-
-# Monitor deployment progress with debug output
-k0sctl apply --config k0sctl.yaml --debug
+k0sctl apply --config k0s/k0sctl.yaml
 ```
 
-### Deployment Process
+Add `--debug` if a step fails. k0sctl checks SSH access, installs k0s on both nodes, initializes the controller, joins the worker and installs the flux-operator chart.
 
-The deployment performs the following steps:
-
-1. **Connectivity Check**: Validates SSH access to all nodes
-2. **System Preparation**: Installs k0s binary on all nodes
-3. **Control Plane Init**: Initializes the Kubernetes control plane
-4. **Worker Join**: Joins the worker node to the cluster
-5. **Network Setup**: Configures Calico CNI
-6. **Health Check**: Verifies cluster functionality
-
-## Cluster Verification
-
-### Get Cluster Access
+### 4. Get cluster access
 
 ```bash
-# Generate kubeconfig
-mkdir ~/.kube
-k0sctl kubeconfig --config k0sctl.yaml > ~/.kube/config
-
-# Verify kubectl access
-kubectl cluster-info
+mkdir -p ~/.kube
+k0sctl kubeconfig --config k0s/k0sctl.yaml > ~/.kube/config
+kubectl config current-context    # lab-cluster
+kubectl --context lab-cluster cluster-info
 ```
 
-### Verify Cluster Status
+!!! warning
+    This overwrites `~/.kube/config`. If you already have other clusters, write to a separate file and merge it, or use `KUBECONFIG`.
 
-#### Check Node Status
+### 5. Connect Flux to the GitOps repository
+
+flux-operator is running but has nothing to sync yet. Create the `FluxInstance` that points it at `gitops-fluxcd`:
 
 ```bash
-# List all nodes
-kubectl get nodes
-
-# Expected output:
-# NAME       STATUS   ROLES    AGE   VERSION
-# worker01   Ready    <none>   4m    v1.36.4+k0s
-
-# Check node details
-kubectl get nodes -o wide
+kubectl --context lab-cluster apply -f - <<'EOF'
+apiVersion: fluxcd.controlplane.io/v1
+kind: FluxInstance
+metadata:
+  name: flux
+  namespace: flux-system
+spec:
+  distribution:
+    version: "2.x"
+    registry: ghcr.io/fluxcd
+    artifact: oci://ghcr.io/controlplaneio-fluxcd/flux-operator-manifests
+  components:
+    - source-controller
+    - kustomize-controller
+    - helm-controller
+    - notification-controller
+  cluster:
+    type: kubernetes
+    size: small
+    networkPolicy: true
+  sync:
+    kind: GitRepository
+    url: https://github.com/riupie/gitops-fluxcd.git
+    ref: refs/heads/main
+    path: clusters/development
+    interval: 1m
+EOF
 ```
 
-#### Verify System Pods
+From here on, Flux manages the `FluxInstance` and every add-on from `clusters/development` in the repo. Change the cluster by committing to `gitops-fluxcd`, not with `kubectl apply`.
+
+## Verify
+
+### 1. Nodes and system pods
 
 ```bash
-# Check system pods status
-kubectl get pods -n kube-system
-
-# Expected pods:
-# - calico-* (CNI networking)
-# - coredns-* (DNS resolution)
-# - konnectivity-* (API server connectivity)
-# - metrics-server-* (resource metrics)
-
-# Check MetalLB (installed by the k0s Helm extension)
-kubectl get pods -n metallb
-
-# Check pod status across all namespaces
-kubectl get pods --all-namespaces
+kubectl --context lab-cluster get nodes -o wide
+kubectl --context lab-cluster -n kube-system get pods
 ```
 
-## Next Steps
+Expected output:
 
-After successful Kubernetes setup:
+```text
+NAME       STATUS   ROLES    AGE   VERSION       INTERNAL-IP     ...
+worker01   Ready    <none>   4m    v1.36.4+k0s   192.168.10.11   ...
+```
 
-1. **MetalLB** - Define an `IPAddressPool` and `L2Advertisement` for LoadBalancer services (only the chart is installed)
-2. **CI/CD** - Set up GitOps with Flux ([`riupie/gitops-fluxcd`](https://github.com/riupie/gitops-fluxcd))
+`kube-system` contains `calico-*`, `coredns-*`, `konnectivity-agent-*`, `kube-proxy-*` and `metrics-server-*` pods, all `Running`.
+
+### 2. Flux
+
+```bash
+kubectl --context lab-cluster -n flux-system get fluxinstance,gitrepository,kustomization
+kubectl --context lab-cluster get helmrelease -A
+```
+
+Expected: the `FluxInstance` `flux` is `READY True`, the `flux-system` GitRepository points at `https://github.com/riupie/gitops-fluxcd.git`, and the Kustomizations (`flux-system`, `infrastructure`, `infrastructure-configs`, `apps`) are `READY True`. HelmReleases for MetalLB, cert-manager, External-DNS, External Secrets, Sealed Secrets and agentgateway appear as they reconcile.
+
+### 3. MetalLB
+
+```bash
+kubectl --context lab-cluster -n metallb get ipaddresspool,l2advertisement
+```
+
+Expected: `IPAddressPool` `lb-pool` with `192.168.10.100-192.168.10.110` and a matching `L2Advertisement`.
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `k0sctl apply` fails at SSH connect | Your key isn't on the VMs, or the user isn't `cloud` | Re-check the `ssh_keys` step in [Infrastructure Deployment](infrastructure-deployment.md#step-3-deploy-vms) |
+| `kubectl get nodes` shows only worker01 | Expected: the controller runs no kubelet | Nothing to fix |
+| `FluxInstance` not ready | flux-operator can't pull the distribution from `ghcr.io` | `kubectl --context lab-cluster -n flux-system logs deploy/flux-operator` |
+| Kustomization `infrastructure` fails | A manifest in `gitops-fluxcd` is invalid | `kubectl --context lab-cluster -n flux-system describe kustomization infrastructure`, fix it in the repo |
+
+## Next steps
+
+1. [Set Up Dynamic DNS](../playbooks/dynamic-dns.md): BIND9 on general01, which External-DNS writes to
+2. [Secure MCP Servers with OAuth](../playbooks/mcp-oauth.md): Keycloak in front of MCP servers on agentgateway

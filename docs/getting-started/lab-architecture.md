@@ -1,144 +1,101 @@
 # Lab Architecture
+
+This page describes the lab as it runs today: one KVM host, one libvirt NAT network and three VMs. A single-node k0s cluster runs on two of them, and the third provides DNS and identity.
+
 ## Overview
 
-<figure markdown="span">
-  ![Lab Architecture](../assets/imgs/lab-architecture.svg){ width=900 }
-  <figcaption>Infrastructure Lab Architecture Diagram</figcaption>
-</figure>
+```mermaid
+graph TB
+    subgraph host["Host: jarvis (Fedora 44, KVM/libvirt)"]
+        tofu[OpenTofu + k0sctl + kubectl]
+        subgraph net["net-lab 192.168.10.0/24 (virbr1, NAT, gateway .1)"]
+            general01["general01 · 192.168.10.9<br/>BIND9 (lab.riupie.com)<br/>Keycloak + PostgreSQL"]
+            master01["master01 · 192.168.10.10<br/>k0s controller"]
+            worker01["worker01 · 192.168.10.11<br/>k0s worker"]
+            lb["MetalLB pool<br/>192.168.10.100-110"]
+        end
+    end
+    git[(github.com/riupie/gitops-fluxcd)]
 
-This document provides a comprehensive overview of the network configuration and virtual machine layout for a KVM-based home lab environment. The architecture uses libvirt for virtualization management on a Linux host and is designed for learning, development, and testing purposes.
-
-### Architecture Highlights
-
-- **Hypervisor**: KVM with libvirt management
-- **Network Design**: NAT-based virtual networks with custom bridges
-- **Service Discovery**: Internal DNS with Tailscale integration
-- **Orchestration**: Kubernetes cluster for container workloads
-- **Remote Access**: Tailscale subnet routing for secure external access
-
----
-
-## Host Network Configuration
-
-The host machine (`jarvis`) manages multiple network interfaces for VM connectivity and external access.
-
-### Network Interface Details
-
-| Interface | Type | Purpose | Configuration |
-|-----------|------|---------|---------------|
-| **`enp8s0`** | Physical NIC | LAN connectivity | Connected to home/office network |
-| **`virbr1`** | Virtual Bridge | VM internal network | Subnet: `192.168.10.0/24` |
-| **`virbr2`** | Virtual Bridge | VM storage internal network | Subnet: `192.168.11.0/24` |
-| **`vnetX`** | Virtual TAP | VM network adapters | Auto-created by libvirt, attached to `virbr1` and `virbr2` |
-
----
-
-## Virtual Machine Inventory
-
-The lab environment consists of 5 virtual machines, each serving specific roles in the infrastructure:
-
-| VM ID | Hostname | Status | Role | IP Address | Interface | Resources |
-|-------|----------|--------|------|------------|-----------|-----------|
-| 2 | **general01** | Running | DNS Server + Tailscale Router | `192.168.10.9` | vnet4 | 2 vCPU, 4GB RAM |
-| 3 | **master01** | Running | Kubernetes Control Plane | `192.168.10.10` | vnet5 | 2 vCPU, 4GB RAM |
-| 4 | **worker01** | Running | Kubernetes Worker Node | `192.168.10.11` | vnet6 | 2 vCPU, 8GB RAM |
-| 5 | **worker02** | Running | Kubernetes Worker Node | `192.168.10.12` | vnet7 | 2 vCPU, 8GB RAM |
-| 6 | **worker03** | Running | Kubernetes Worker Node | `192.168.10.13` | vnet9 | 2 vCPU, 8GB RAM |
-
-### VM Connectivity
-
-- **Internal Communication**: All VMs connected via `virbr1` bridge (192.168.10.0/24)
-- **External Access**: NAT through host machine
-- **Service Discovery**: Internal DNS provided by general01
-- **Remote Access**: Tailscale subnet routing for external connectivity
-
----
-
-## Network Architecture
-
-### NAT-based Networking
-
-The lab uses NAT (Network Address Translation) mode for VM connectivity, providing isolation and security:
-
-| Feature | Description | Note |
-|---------|-------------|---------|
-| **Private Subnet** | VMs operate on `192.168.10.0/24` and `192.168.11.0/24` | Network isolation from external networks |
-| **Internet Access** | Outbound connectivity via host | VMs can reach external services |
-| **External Isolation** | No direct inbound access from LAN | Enhanced security posture |
-
-### Access Patterns
-
-```
-Direction    | Source        | Destination   | Status
--------------|---------------|---------------|--------
-Outbound     | VMs           | Internet      | ✅ Allowed
-Internal     | VM ↔ VM       | Internal IPs  | ✅ Allowed
-Host Access  | VMs ↔ Host    | Host Bridge   | ✅ Allowed
-Inbound      | LAN → VMs     | VM IPs        | ❌ Blocked (NAT)
+    tofu -->|provisions| net
+    tofu -->|k0sctl apply| master01
+    master01 --- worker01
+    worker01 -.->|L2 announce| lb
+    worker01 -->|Flux pulls| git
+    worker01 -->|External-DNS RFC2136| general01
+    lb -->|keycloak.lab.riupie.com| general01
 ```
 
-!!! note
-    External access to VMs requires either port forwarding or Tailscale subnet routing.
+## Host
 
-## Infrastructure Services
+| Item | Value |
+|---|---|
+| Hostname | `jarvis` |
+| OS | Fedora 44 |
+| CPU | AMD Ryzen 7 9700X (8 cores / 16 threads) |
+| Memory | 32 GB |
+| Virtualization | KVM, libvirt 12 (`qemu:///system`), storage pool `default` at `/var/lib/libvirt/images` |
+| Tools | OpenTofu, k0sctl, kubectl, flux; the kube context is `lab-cluster` |
 
-### Bastion Host (general01)
+The host resolves `lab.riupie.com` through general01 using a systemd-resolved routing domain on `virbr1`. See [Set Up Dynamic DNS, step 8](../playbooks/dynamic-dns.md#8-optional-resolve-the-lab-zone-from-the-fedora-host).
 
-The bastion host provides critical infrastructure services for the lab environment:
+## Network
 
-#### Internal DNS Server (BIND9)
+| Network | Bridge | Subnet | Mode | Gateway / DHCP |
+|---|---|---|---|---|
+| `net-lab` | `virbr1` | `192.168.10.0/24` | NAT | `192.168.10.1` (libvirt dnsmasq); VMs use static IPs |
 
-| Service | Configuration | Purpose |
-|---------|---------------|---------|
-| **DNS Software** | BIND9 | Authoritative DNS for internal zone |
-| **Zone** | `*.lab.riupie.com` | Internal service discovery |
-| **Forwarders** | 1.1.1.1, 8.8.8.8 | External DNS resolution |
-| **Clients** | All lab VMs | Centralized name resolution |
+| Direction | Source → destination | Allowed |
+|---|---|---|
+| Outbound | VMs → internet (NAT through the host) | Yes |
+| Internal | VM ↔ VM, host ↔ VMs | Yes |
+| Inbound | LAN → VMs | No (NAT) |
 
-#### Tailscale Integration
+Address plan:
 
-| Feature | Configuration | Benefit |
-|---------|---------------|---------|
-| **Subnet Router** | Advertises `192.168.10.0/24` | Remote access to entire lab |
-| **Exit Node** | Optional internet routing | Secure external connectivity |
-| **Authentication** | Tailnet integration | SSO-based access control |
-| **Encryption** | WireGuard protocol | Zero-trust network security |
+| Range | Use |
+|---|---|
+| `192.168.10.1` | Host / libvirt gateway and DNS forwarder |
+| `192.168.10.9–11` | VMs (static, set in `jarvis-kvm/terraform/vm/main.tf`) |
+| `192.168.10.100–110` | MetalLB `IPAddressPool` `lb-pool` (L2); `192.168.10.100` is the agentgateway `Gateway` |
 
-## Hardware Requirements
+## Virtual machines
 
-### Production Host Specifications
+All VMs use the Debian 12 genericcloud image. SSH user: `cloud`.
 
-The lab runs on a dedicated bare-metal server with the following specifications:
+| VM | IP | vCPU | Memory | Disk | Role |
+|---|---|---|---|---|---|
+| **general01** | `192.168.10.9` | 1 | 2 GB | 20 GB | BIND9 authoritative/recursive DNS for `lab.riupie.com`; Keycloak + PostgreSQL (Docker Compose) |
+| **master01** | `192.168.10.10` | 2 | 4 GB | 50 GB | k0s controller (control plane only; not listed in `kubectl get nodes`) |
+| **worker01** | `192.168.10.11` | 2 | 8 GB | 50 GB | k0s worker; runs all cluster workloads |
 
-| Component | Specification | Usage |
-|-----------|---------------|--------|
-| **CPU** | AMD Ryzen 5 3600 (12 cores @ 3.6GHz) | VM compute resources |
-| **Memory** | 64GB DDR4 | VM memory allocation |
-| **Storage** | SSD storage pool | VM disk images and data |
-| **Network** | 1Gbps Ethernet | Internet and LAN connectivity |
-| **OS** | Debian GNU/Linux 12 (bookworm) | KVM hypervisor host |
+## Services
 
-### Host System Details
+### general01
 
-```bash
-# System Information
-OS: Debian GNU/Linux 12 (bookworm) x86_64
-Kernel: 6.1.0-28-amd64
-CPU: AMD Ryzen 5 3600 (12) @ 3.600GHz
-Memory: 64GB DDR4
-Virtualization: KVM with libvirt
-```
+| Service | Details | Guide |
+|---|---|---|
+| BIND9 | Zone `lab.riupie.com`, forwards to `192.168.10.1`, TSIG dynamic updates for External-DNS | [Set Up Dynamic DNS](../playbooks/dynamic-dns.md) |
+| Keycloak | Realm `mcp`, exposed as `https://keycloak.lab.riupie.com` through the gateway | [Secure MCP Servers with OAuth](../playbooks/mcp-oauth.md) |
 
-### Minimum Requirements
+### Kubernetes (`lab-cluster`)
 
-For testing or development environments, you can use alternative hardware:
+k0s with Calico (CNI) and kube-proxy in IPVS mode. k0sctl installs only flux-operator; everything else is reconciled by Flux from [`riupie/gitops-fluxcd`](https://github.com/riupie/gitops-fluxcd) (`clusters/development`):
 
-| Component | Minimum | Recommended | Notes |
-|-----------|---------|-------------|-------|
-| **CPU** | 4 cores | 8+ cores | Must support virtualization (VT-x/AMD-V) |
-| **Memory** | 16GB | 32GB+ | 4GB per VM + host overhead |
-| **Storage** | 100GB | 500GB+ | SSD recommended for performance |
-| **Network** | 1Gbps | 1Gbps+ | For VM and container networking |
+| Add-on | Purpose |
+|---|---|
+| MetalLB | LoadBalancer IPs from `lb-pool` |
+| cert-manager | TLS certificates |
+| External-DNS | Publishes Gateway/HTTPRoute hostnames to BIND9 on general01 |
+| External Secrets, Sealed Secrets | Secret delivery |
+| agentgateway | Gateway API implementation, MCP and AI traffic (`gateway-ai`) |
 
-!!! note
-    Laptop or desktop systems can be used as long as they meet the minimum requirements and support hardware virtualization.
+## Minimum host requirements
+
+The VMs need 5 vCPUs, 14 GB RAM and about 120 GB of disk in total (qcow2 is thin-provisioned, but plan for the full size).
+
+| Component | Minimum | Recommended |
+|---|---|---|
+| CPU | 4 cores with VT-x/AMD-V | 8+ cores |
+| Memory | 24 GB | 32 GB+ |
+| Storage | 150 GB SSD | 250 GB+ NVMe |
