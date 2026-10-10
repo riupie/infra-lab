@@ -5,6 +5,15 @@ repo_name: riupie/infra-lab
 repo_url: https://github.com/riupie/infra-lab
 
 docs_dir: .
+# docs_dir is the repo root: keep code, state and keys out of the published site
+exclude_docs: |
+  /addons/
+  /jarvis-kvm/
+  /k0s/
+  /requirements.txt
+  /LICENSE
+  *.key
+  *.tfstate*
 
 nav:
   - Getting Started:
