@@ -188,6 +188,8 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now lab-dns@virbr1.service
 ```
 
+`systemctl enable` warns that the unit `is added as a dependency to a non-existent unit sys-subsystem-net-devices-virbr1.device`. This is expected: device units are created at runtime by udev and have no unit file, but the dependency link is still created and works.
+
 Check it:
 
 ```bash
