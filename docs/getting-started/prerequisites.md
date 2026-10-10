@@ -69,8 +69,13 @@ for drv in qemu network storage nodedev nwfilter secret interface proxy; do
 done
 ```
 
-!!! warning "Host that already runs `libvirtd`"
-    If `systemctl is-active libvirtd` prints `active` (for example, after following an older version of this guide), switch to the modular daemons. Shut down the lab VMs first: the daemon switch disconnects running guests from management until `virtqemud` takes over.
+!!! warning "Host where `libvirtd` is still enabled"
+    An older version of this guide ran `systemctl enable --now libvirtd`. Check with `systemctl is-enabled libvirtd`:
+
+    - `enabled` but `systemctl is-active libvirtd` prints `inactive`: the modular daemons are already in use (the usual case on Fedora). Disabling `libvirtd` only removes the leftover; running VMs are not affected.
+    - `active`: `libvirtd` is managing your VMs. Shut down the lab VMs first, because switching daemons disconnects running guests from management until `virtqemud` takes over.
+
+    In both cases:
 
     ```bash
     sudo systemctl disable --now libvirtd.service libvirtd.socket libvirtd-ro.socket libvirtd-admin.socket
