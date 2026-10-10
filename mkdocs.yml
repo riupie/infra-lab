@@ -14,6 +14,8 @@ exclude_docs: |
   /LICENSE
   *.key
   *.tfstate*
+  # obsolete, kept in git for reference
+  /docs/playbooks/storage/
 
 nav:
   - Getting Started:
@@ -24,10 +26,6 @@ nav:
       - Infrastructure Deployment: docs/getting-started/infrastructure-deployment.md
       - Kubernetes Setup: docs/getting-started/kubernetes-setup.md
   - Playbook:
-    - Ceph Storage:
-      - Overview: docs/playbooks/storage/overview.md
-      - Deployment: docs/playbooks/storage/deployment.md
-      - Kubernetes Integration: docs/playbooks/storage/integrations/kubernetes.md
     - BIND9 DNS:
       - Deployment: docs/playbooks/bind9/deployment.md
     - AI Gateway:

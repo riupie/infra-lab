@@ -152,4 +152,3 @@ After successful Kubernetes setup:
 
 1. **MetalLB** - Define an `IPAddressPool` and `L2Advertisement` for LoadBalancer services (only the chart is installed)
 2. **CI/CD** - Set up GitOps with ArgoCD
-3. *(Optional)* **[Storage Integration](../playbooks/storage/integrations/kubernetes.md)** - Only if you deploy the Ceph nodes, which the current single-worker setup does not use
