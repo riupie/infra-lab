@@ -202,6 +202,7 @@ ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags add_node
 
 !!! info
     Applied node roles:
+
     - ceph01: `_admin`, `mon`, `mgr`, `osd`, `rgw`
     - ceph02: `mon`, `mgr`, `osd`, `rgw`
     - ceph03: `mon`, `mgr`, `osd`, `rgw`
@@ -215,6 +216,7 @@ ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags deploy_s
 
 !!! info
     Deployed services:
+
     - 3x MON: Cluster state management
     - 3x MGR: Cluster management and dashboard
     - 3x RGW: Object storage gateway
@@ -227,6 +229,7 @@ ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags configur
 ```
 !!! info
     OSD configuration:
+
     - Data Device: `/dev/vdb` (100GB per node)
     - DB Device: `/dev/vdc` (50GB per node)
     - Total OSDs: 6 (2 per node)
@@ -239,6 +242,7 @@ ansible-playbook -i inventories/development/hosts.yaml site.yaml --tags configur
 ```
 !!! info
     Created some ceph pools:
+
     - kubernetes
     - rbd_ec
     - data pool for RGW

@@ -61,7 +61,6 @@ markdown_extensions:
   - admonition
   - smarty
   - sane_lists
-  - nl2br
   - attr_list
   - def_list
   - footnotes

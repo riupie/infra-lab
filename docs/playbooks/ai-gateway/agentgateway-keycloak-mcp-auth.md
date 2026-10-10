@@ -140,6 +140,7 @@ backend:
 ```
 
 Consistency rules (the usual failure points):
+
 - `issuer` == discovery `issuer` == token `iss` (scheme, host, realm path; no trailing slash).
 - `audiences` == audience mapper "Included Custom Audience" (exact string).
 - `scopesSupported` contains the per-server scope; otherwise DCR clients never request it
