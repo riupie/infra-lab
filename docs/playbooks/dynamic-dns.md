@@ -1,3 +1,7 @@
+---
+description: "Run BIND9 on general01 as authoritative and recursive DNS for the lab.riupie.com zone, with TSIG-secured dynamic updates for External-DNS."
+---
+
 # Set up dynamic DNS for the lab zone
 
 This playbook runs BIND9 as authoritative DNS for the `lab.riupie.com` zone plus recursive resolution for the lab, with TSIG-secured dynamic updates so External-DNS can register records from Kubernetes.
@@ -31,12 +35,20 @@ ssh cloud@192.168.10.9 'sudo install -d /opt/bind9/config/keys /opt/bind9/zones 
 *On the host:*
 
 ```bash
-rsync -av --rsync-path='sudo rsync' --exclude README.md --exclude 'config/keys/' \
-  addons/bind9/ cloud@192.168.10.9:/opt/bind9/
+stage="$(mktemp -d)"
+cp -a addons/bind9/. "$stage"/
+rm -rf "$stage/config/keys" "$stage/README.md"   # keys are generated on general01 (step 3)
+# existing server (rebuild)? also: rm -rf "$stage/zones"
+
+scp -r "$stage" cloud@192.168.10.9:/tmp/bind9-stage
+rm -rf "$stage"
+ssh cloud@192.168.10.9 'sudo cp -a /tmp/bind9-stage/* /opt/bind9/ && rm -rf /tmp/bind9-stage'
 ```
 
+`rsync` is not installed on a fresh general01, so the files go through a staging directory instead.
+
 !!! warning "Rebuilds"
-    External-DNS writes records into the zone journal (`zones/*.jnl`) on general01. Re-running this rsync on a live server overwrites `zones/lab.riupie.com.zone`; on an existing server copy only `config/` and `docker-compose.yaml`, and bump the SOA serial when you edit the zone by hand.
+    External-DNS writes records into the zone journal (`zones/*.jnl`) on general01. Copying `zones/` onto a live server overwrites `zones/lab.riupie.com.zone`; on an existing server copy only `config/` and `docker-compose.yaml` (uncomment the `rm -rf "$stage/zones"` line), repeat step 4, and bump the SOA serial when you edit the zone by hand.
 
 The copied files:
 
@@ -76,6 +88,7 @@ The copied files:
 
 ```bash
 cd /opt/bind9
+umask 077   # the key must not be readable by other users while it is being written
 docker run --rm --entrypoint tsig-keygen internetsystemsconsortium/bind9:9.20 \
   -a hmac-sha512 externaldns-key | sudo tee config/keys/external-dns.key >/dev/null
 ```
@@ -148,10 +161,10 @@ running
 *On general01:*
 
 ```bash
-sudo grep secret /opt/bind9/config/keys/external-dns.key
+sudo awk -F'"' '/secret/ {print $2}' /opt/bind9/config/keys/external-dns.key
 ```
 
-Use the value (without quotes) as the RFC2136 TSIG secret in the External-DNS configuration, with key name `externaldns-key` and algorithm `hmac-sha512`.
+Use the printed value as the RFC2136 TSIG secret in the External-DNS configuration, with key name `externaldns-key` and algorithm `hmac-sha512`.
 
 ### 8. Resolve the lab zone from the Fedora host
 
@@ -215,7 +228,7 @@ ns1.lab.riupie.com: 192.168.10.9                -- link: virbr1
     sudo systemctl restart lab-dns@virbr1.service   # re-apply after the resolved restart
     ```
 
-To undo: `sudo systemctl disable --now lab-dns@virbr1.service && sudo rm /etc/systemd/system/lab-dns@.service`.
+To undo: `sudo systemctl disable --now lab-dns@virbr1.service && sudo rm /etc/systemd/system/lab-dns@.service && sudo systemctl daemon-reload`.
 
 ## Verify
 

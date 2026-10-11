@@ -34,3 +34,10 @@ terraform.rc
 
 .venv
 site/
+
+# Keycloak runtime secrets (addons/keycloak/.env.example is the template)
+addons/keycloak/.env
+
+# claude
+.claude/
+skills-lock.json

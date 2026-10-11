@@ -1,3 +1,7 @@
+---
+description: "Install a minimal k0s cluster on the lab VMs with k0sctl, then hand it to Flux via flux-operator, with verification, troubleshooting and teardown."
+---
+
 # Kubernetes Setup
 
 This guide installs a minimal k0s cluster (`lab-cluster`) on master01 and worker01 with k0sctl, then hands the cluster over to Flux, which installs every add-on from [`riupie/gitops-fluxcd`](https://github.com/riupie/gitops-fluxcd).
@@ -25,12 +29,13 @@ Stack: k0s `v1.36.4+k0s.1`, k0sctl `v0.33.1`, Calico, flux-operator `0.61.0` (Fl
 
 ```bash
 K0SCTL_VERSION=v0.33.1
-mkdir -p /tmp/k0sctl && cd /tmp/k0sctl
+dl="$(mktemp -d)" && cd "$dl"
 curl -fsSLO https://github.com/k0sproject/k0sctl/releases/download/${K0SCTL_VERSION}/k0sctl-linux-amd64
 curl -fsSLO https://github.com/k0sproject/k0sctl/releases/download/${K0SCTL_VERSION}/checksums.txt
 sha256sum --check --ignore-missing checksums.txt
 sudo install -m 0755 k0sctl-linux-amd64 /usr/local/bin/k0sctl
 k0sctl version
+cd - >/dev/null && rm -rf "$dl"
 ```
 
 !!! note
@@ -105,7 +110,7 @@ spec:
 EOF
 ```
 
-From here on, Flux manages the `FluxInstance` and every add-on from `clusters/development` in the repo. Change the cluster by committing to `gitops-fluxcd`, not with `kubectl apply`.
+From here on, Flux reconciles every add-on from `clusters/development` in the repo: change the add-ons by committing to `gitops-fluxcd`, not with `kubectl apply`. The `kubectl apply` above only bootstraps the `FluxInstance`. Once it syncs, Flux also reconciles the copy in `clusters/development/flux-system/flux-instance.yaml`, so change it there rather than re-applying the manifest above.
 
 ## Verify
 
@@ -150,6 +155,22 @@ Expected: `IPAddressPool` `lb-pool` with `192.168.10.100-192.168.10.110` and a m
 | `kubectl get nodes` shows only worker01 | Expected: the controller runs no kubelet | Nothing to fix |
 | `FluxInstance` not ready | flux-operator can't pull the distribution from `ghcr.io` | `kubectl --context lab-cluster -n flux-system logs deploy/flux-operator` |
 | Kustomization `infrastructure` fails | A manifest in `gitops-fluxcd` is invalid | `kubectl --context lab-cluster -n flux-system describe kustomization infrastructure`, fix it in the repo |
+
+## Cleanup
+
+⚠ WARNING: Destructive operation. This removes k0s and all cluster data (etcd, workloads, PVC contents on worker01) from both nodes. The VMs are left in place.
+
+```bash
+k0sctl reset --config k0s/k0sctl.yaml    # asks for confirmation; add --force to skip it
+```
+
+Then remove the local access you created in step 4 (this deletes `~/.kube/config` entirely; skip it if the file holds other clusters):
+
+```bash
+rm ~/.kube/config
+```
+
+To remove the VMs as well, follow [Infrastructure Deployment, Cleanup](infrastructure-deployment.md#cleanup). Removing the VMs also removes the cluster, so `k0sctl reset` is only needed to rebuild the cluster on the same VMs.
 
 ## Next steps
 

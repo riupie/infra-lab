@@ -1,15 +1,15 @@
-
 # Infra Lab
-This project is designed as a hands-on learning experience to set up an on-premise Kubernetes cluster using KVM. It covers the deployment of core Kubernetes services and demonstrates how to automate infrastructure setup and application delivery using Infrastructure as Code (IaC) and GitOps principles, leveraging tools like Terraform and Flux.
+This project is designed as a hands-on learning experience to set up an on-premise Kubernetes cluster using KVM. It covers the deployment of core Kubernetes services and demonstrates how to automate infrastructure setup and application delivery using Infrastructure as Code (IaC) and GitOps principles, leveraging tools like OpenTofu and Flux.
 
 Every step of the process—from planning and designing the cluster architecture to manually configuring each component—has been carefully documented. These guides are available in the documentation section, making it easy for anyone to replicate and build their own home Kubernetes cluster.
 
 ## Directory Hierarchy
 
-```
+```text
 .
 ├── addons
-│   └── bind9
+│   ├── bind9
+│   └── keycloak
 ├── docs
 │   ├── assets
 │   ├── getting-started
@@ -32,7 +32,7 @@ Every step of the process—from planning and designing the cluster architecture
 
 ## Technology Stack
 
-The following picture shows the high level components of opensource solutions used so far in the cluster, which installation process has been documented and its deployment has been automated with Open Tofu:
+The following picture shows the high level components of opensource solutions used so far in the cluster, which installation process has been documented and its deployment has been automated with OpenTofu:
 
 <p align="center">
   <img src="https://riupie.com/infra-lab/assets/imgs/tech-stack.svg" width="500"/>
@@ -46,17 +46,17 @@ The following picture shows the high level components of opensource solutions us
         <th>Description</th>
     </tr>
     <tr>
-        <td><img width="32" src="https://fluxcd.io/favicons/android-chrome-192x192.png"></td>
+        <td><img width="32" src="https://fluxcd.io/favicons/android-chrome-192x192.png" alt="Flux logo"></td>
         <td><a href="https://fluxcd.io/">Flux</a></td>
         <td>GitOps tool (manifests in <a href="https://github.com/riupie/gitops-fluxcd">gitops-fluxcd</a>)</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://cloudinit.readthedocs.io/en/latest/_static/logo.png"></td>
+        <td><img width="32" src="https://cloudinit.readthedocs.io/en/latest/_static/logo.png" alt="Cloud-init logo"></td>
         <td><a href="https://cloudinit.readthedocs.io/en/latest/">Cloud-init</a></td>
         <td>Automate OS initial installation</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://landscape.cncf.io/logos/f26381b645b2f14293a2a597bc98b5bbe1e5e086029de41830ba7c667353bf3e.svg"></td>
+        <td><img width="32" src="https://landscape.cncf.io/logos/f26381b645b2f14293a2a597bc98b5bbe1e5e086029de41830ba7c667353bf3e.svg" alt="Containerd logo"></td>
         <td><a href="https://containerd.io/">Containerd</a></td>
         <td>Container runtime integrated with K0S</td>
     </tr>
@@ -66,17 +66,17 @@ The following picture shows the high level components of opensource solutions us
         <td>Kubernetes Networking (CNI)</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://coredns.io/images/CoreDNS_Colour_Horizontal.png"></td>
+        <td><img width="32" src="https://coredns.io/images/CoreDNS_Colour_Horizontal.png" alt="CoreDNS logo"></td>
         <td><a href="https://coredns.io/">CoreDNS</a></td>
         <td>Kubernetes DNS</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://www.debian.org/Pics/openlogo-50.png"></td>
+        <td><img width="32" src="https://www.debian.org/Pics/openlogo-50.png" alt="Debian logo"></td>
         <td><a href="https://debian.org/">Debian</a></td>
         <td>VM OS (cluster nodes and general01)</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://fedoraproject.org/favicon.ico"></td>
+        <td><img width="32" src="https://fedoraproject.org/favicon.ico" alt="Fedora logo"></td>
         <td><a href="https://fedoraproject.org/">Fedora</a></td>
         <td>KVM host OS</td>
     </tr>
@@ -86,24 +86,49 @@ The following picture shows the high level components of opensource solutions us
         <td>External DNS synchronization</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://cert-manager.io/images/cert-manager-logo-icon.svg"></td>
+        <td><img width="32" src="https://cert-manager.io/images/cert-manager-logo-icon.svg" alt="Cert-manager logo"></td>
         <td><a href="https://cert-manager.io">Cert-manager</a></td>
         <td>TLS Certificates management</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://k0sproject.io/images/k0s_logo.svg"></td>
+        <td><img width="32" src="https://k0sproject.io/images/k0s_logo.svg" alt="K0S logo"></td>
         <td><a href="https://k0sproject.io/">K0S</a></td>
         <td> The simple, solid & certified Kubernetes distribution that works on any infrastructure</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://linux-kvm.org/kvmless/kvmbanner-logo3.png"></td>
+        <td><img width="32" src="https://linux-kvm.org/kvmless/kvmbanner-logo3.png" alt="KVM logo"></td>
         <td><a href="https://linux-kvm.org/page/Main_Page">KVM</a></td>
         <td> Full virtualization solution for Linux on x86 hardware containing virtualization extensions (Intel VT or AMD-V)</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://landscape.cncf.io/logos/d19371232c839420223f96327f99332bce52962724a113bd61f3eef10a0bc637.svg"></td>
+        <td><img width="32" src="https://landscape.cncf.io/logos/d19371232c839420223f96327f99332bce52962724a113bd61f3eef10a0bc637.svg" alt="MetalLB logo"></td>
         <td><a href="https://metallb.io/">MetalLB</a></td>
         <td>Load-balancer implementation for bare metal Kubernetes clusters</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td><a href="https://www.isc.org/bind/">BIND9</a></td>
+        <td>Authoritative and recursive DNS for the lab zone, with TSIG dynamic updates</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td><a href="https://www.keycloak.org/">Keycloak</a></td>
+        <td>Identity provider (OIDC, Dynamic Client Registration) for MCP servers</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td><a href="https://agentgateway.dev/">agentgateway</a></td>
+        <td>Gateway API implementation for MCP and AI traffic</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td><a href="https://external-secrets.io/">External Secrets</a></td>
+        <td>Syncs secrets from external stores into Kubernetes</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td><a href="https://github.com/bitnami-labs/sealed-secrets">Sealed Secrets</a></td>
+        <td>Encrypted secrets that are safe to store in Git</td>
     </tr>
 </table>
 </div>

@@ -1,3 +1,7 @@
+---
+description: "Architecture of the infra-lab: one KVM host, one libvirt NAT network, three Debian VMs and a single-node k0s cluster reconciled by Flux."
+---
+
 # Lab Architecture
 
 This page describes the lab as it runs today: one KVM host, one libvirt NAT network and three VMs. A single-node k0s cluster runs on two of them, and the third provides DNS and identity.
@@ -76,7 +80,7 @@ All VMs use the Debian 12 genericcloud image. SSH user: `cloud`.
 | Service | Details | Guide |
 |---|---|---|
 | BIND9 | Zone `lab.riupie.com`, forwards to `192.168.10.1`, TSIG dynamic updates for External-DNS | [Set Up Dynamic DNS](../playbooks/dynamic-dns.md) |
-| Keycloak | Realm `mcp`, exposed as `https://keycloak.lab.riupie.com` through the gateway | [Secure MCP Servers with OAuth](../playbooks/mcp-oauth.md) |
+| Keycloak | Realm `mcp`, exposed as `https://keycloak.lab.riupie.com` through the gateway | [Run Keycloak](../playbooks/keycloak.md), [Secure MCP Servers with OAuth](../playbooks/mcp-oauth.md) |
 
 ### Kubernetes (`lab-cluster`)
 

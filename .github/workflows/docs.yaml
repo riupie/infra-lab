@@ -6,6 +6,7 @@ on:
     paths:
       - docs/**
       - addons/bind9/**   # embedded in the BIND9 playbook via snippets
+      - addons/keycloak/**   # embedded in the Keycloak playbook via snippets
       - README.md         # site homepage (docs/index.md symlink)
       - zensical.toml
 permissions:

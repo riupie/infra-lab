@@ -160,7 +160,22 @@ tofu apply tfplan
 If the plan shows a different `path` than the existing pool (check with `virsh pool-dumpxml default`), update `target.path` in `main.tf` to match, rather than letting OpenTofu replace the pool.
 
 !!! warning "Destroying an imported pool"
-    Once `default` is in state, `tofu destroy` in this directory will delete your host's system `default` pool and the images in it. Skip the storage-pool teardown step in [Cleanup](#cleanup) if you imported it, and remove it from state instead.
+    Once `default` is in state, `tofu destroy` in this directory will delete your host's system `default` pool and the images in it. Before the storage-pool teardown in [Cleanup](#cleanup), detach the pool from state declaratively (OpenTofu 1.7 or newer):
+
+    1. In `storage-pool/main.tf`, replace `libvirt_pool.default.name` with `"default"` in both volumes, and in `outputs.tf` for `pool_default`. Then delete the `resource "libvirt_pool" "default"` block.
+    2. Add `removed.tf` next to `main.tf`:
+
+        ```hcl
+        removed {
+          from = libvirt_pool.default
+
+          lifecycle {
+            destroy = false
+          }
+        }
+        ```
+
+    3. `tofu plan -destroy -out=destroy.tfplan` must list only the `debian12` and `rocky9` volumes as destroyed. If the pool appears in the destroy list, stop and re-check steps 1 and 2.
 
 ### Verify Storage Pool
 
@@ -288,20 +303,31 @@ If it still fails, confirm you replaced `ssh_keys` with your own public key.
 
 Tear down in reverse order, using a saved destroy plan each time:
 
-```bash
-cd jarvis-kvm/terraform/vm
-tofu plan -destroy -out=destroy.tfplan
-tofu apply destroy.tfplan
+1. VMs:
 
-# Skip this block if you imported the host's existing `default` pool
-cd ../storage-pool
-tofu plan -destroy -out=destroy.tfplan
-tofu apply destroy.tfplan
+    ```bash
+    cd jarvis-kvm/terraform/vm
+    tofu plan -destroy -out=destroy.tfplan
+    tofu apply destroy.tfplan
+    ```
 
-cd ../networks
-tofu plan -destroy -out=destroy.tfplan
-tofu apply destroy.tfplan
-```
+2. Storage pool and base images.
+
+    ⚠ WARNING: If you imported the host's existing `default` pool, first detach it as described in the "Destroying an imported pool" warning under [storage pool `default` already exists](#troubleshooting-storage-pool-default-already-exists). Otherwise this deletes the host's system pool and every image in it. The saved plan must not contain `libvirt_pool.default`.
+
+    ```bash
+    cd ../storage-pool
+    tofu plan -destroy -out=destroy.tfplan
+    tofu apply destroy.tfplan
+    ```
+
+3. Network:
+
+    ```bash
+    cd ../networks
+    tofu plan -destroy -out=destroy.tfplan
+    tofu apply destroy.tfplan
+    ```
 
 Verify nothing is left:
 

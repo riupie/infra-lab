@@ -1,3 +1,7 @@
+---
+description: "Put JWT authentication and group-based authorization from Keycloak in front of MCP servers on agentgateway, with Dynamic Client Registration."
+---
+
 # Secure MCP servers with Keycloak OAuth
 
 This playbook puts JWT authentication and group-based authorization in front of MCP servers behind agentgateway, and lets MCP clients self-register in Keycloak via Dynamic Client Registration (DCR) instead of pre-provisioned clients.
@@ -8,11 +12,11 @@ Stack: agentgateway chart `v1.6.0`, Keycloak 26.x, Flux · Target: realm `mcp`, 
 
 ## Prerequisites
 
-- [ ] Keycloak reachable at `https://keycloak.lab.riupie.com` (runs on general01 from `/opt/keycloak` with Docker Compose, exposed through the gateway), realm `mcp` exists. Check the version in the console (Help → Server info); the UI paths below are from Keycloak 26.x.
+- [ ] Keycloak reachable at `https://keycloak.lab.riupie.com` and realm `mcp` created, as in [Run Keycloak on general01](keycloak.md). The certificate is a public Let's Encrypt one issued by cert-manager, so `curl` on the host needs no extra CA. Check the version in the console (Help → Server info); the UI paths below are from Keycloak 26.x.
 - [ ] Gateway `gateway-ai` (ns `gateway-system`) serving host `gateway.lab.riupie.com`: `kubectl --context lab-cluster -n gateway-system get gateway gateway-ai`
 - [ ] Upstream MCP server deployed, e.g. `mcp-website-fetcher` (ns `mcp-server`), path `/mcp/web-fetcher`
 - [ ] Access to the `riupie/gitops-fluxcd` repo: manifests live under `apps/development/mcp-website-fetcher/` and are deployed by Flux; this page documents the Keycloak and gateway setup behind them
-- [ ] On the Fedora host: `*.lab.riupie.com` resolves (see [Dynamic DNS step 8](dynamic-dns.md#8-resolve-the-lab-zone-from-the-fedora-host)), and `curl`/`jq` are installed (`sudo dnf install -y jq`)
+- [ ] On the Fedora host: `*.lab.riupie.com` resolves (see [Dynamic DNS step 8](dynamic-dns.md#8-resolve-the-lab-zone-from-the-fedora-host)), `curl`/`jq`/`openssl` are installed (`sudo dnf install -y jq`), and the `flux` CLI for step 7
 
 ## Steps
 
@@ -104,6 +108,9 @@ Clients → **Client registration** tab → **Anonymous access policies**.
 
 Why the source-IP check is off: Keycloak is behind agentgateway, so it sees the gateway/pod address (or the real client IP via `X-Forwarded-For`, depending on `--proxy-headers`), never a stable, knowable client address. With the IP check off, registration is still constrained by *Client URIs Must Match* (redirect hosts limited to the trusted list), Allowed Client Scopes, Full Scope Disabled and Max Clients Limit.
 
+!!! warning "Lab-only registration policy"
+    With the IP check off and anonymous registration open, anyone who can reach Keycloak can register a client. That is acceptable on the isolated lab network. For a shared environment keep *Host Sending Registration Request Must Match* ON, or require an initial access token instead of anonymous registration.
+
 If you re-enable the IP check and get 403, the rejected host is in the Keycloak server log; add the gateway address (`192.168.10.100` LB IP, or the node/pod IP Keycloak sees).
 
 ### 6. Check realm settings
@@ -122,7 +129,7 @@ Files (in `gitops-fluxcd`): `apps/development/mcp-website-fetcher/`
 | `httproute.yaml` | Routes `/mcp/web-fetcher` **and both** `/.well-known/oauth-*/mcp/web-fetcher` paths to the backend |
 | `policy.yaml` | `AgentgatewayPolicy`: JWT validation, MCP resource metadata, tool authZ |
 
-Key `policy.yaml` fields:
+Key `policy.yaml` fields (the excerpt is the content of `spec:`):
 
 ```yaml
 traffic:
@@ -138,6 +145,7 @@ traffic:
       provider: Keycloak
       resourceMetadata:
         resource: https://gateway.lab.riupie.com/mcp/web-fetcher     # canonical URL of this MCP server
+        authorizationServers: [https://keycloak.lab.riupie.com/realms/mcp]   # issuer clients discover and log in at
         scopesSupported: [openid, mcp, mcp-web-fetcher]              # what clients will request
         bearerMethodsSupported: [header]                             # no tokens in body/query
 backend:
@@ -155,6 +163,8 @@ backend:
     - `scopesSupported` contains the per-server scope; otherwise DCR clients never request it and get no `aud`.
     - The HTTPRoute includes the `.well-known` paths; otherwise discovery returns `404 route not found` and DCR never starts.
     - The gateway can reach `keycloak.lab.riupie.com` and trusts its certificate, to fetch JWKS.
+
+Commit the route and the policy together. A route that is live without its policy exposes the MCP server unauthenticated.
 
 Roll out through Flux (commit → push → reconcile):
 
@@ -189,26 +199,61 @@ curl -s https://gateway.lab.riupie.com/.well-known/oauth-authorization-server/mc
 
 ### 3. DCR
 
-This creates a client in Keycloak; delete it afterwards (see [Rollback](#rollback)).
+This creates a client in Keycloak; delete it afterwards (see [Rollback](#rollback)). Keep its `client_id` for the next check:
 
 ```bash
-curl -s -X POST https://keycloak.lab.riupie.com/realms/mcp/clients-registrations/openid-connect \
+CLIENT_ID=$(curl -s -X POST https://keycloak.lab.riupie.com/realms/mcp/clients-registrations/openid-connect \
   -H 'Content-Type: application/json' \
   -d '{"client_name":"dcr-test","redirect_uris":["http://localhost:8080/callback"],
-       "token_endpoint_auth_method":"none","scope":"openid mcp mcp-web-fetcher"}' | jq
+       "token_endpoint_auth_method":"none","scope":"openid mcp mcp-web-fetcher"}' | jq -r .client_id)
+echo "$CLIENT_ID"
 ```
 
-Expected: in the console, the new client's **Client scopes** tab shows `mcp` as Default and `mcp-web-fetcher` as Optional.
+Expected: a UUID. In the console, the new client's **Client scopes** tab shows `mcp` as Default and `mcp-web-fetcher` as Optional.
 
 ### 4. End to end
 
-Connect with a real client (MCP Inspector, or Claude Code: `claude mcp add --transport http web-fetcher https://gateway.lab.riupie.com/mcp/web-fetcher`) and complete the login. Then decode the access token (JWTs are base64url, hence the `gsub`):
+Get an access token for the `dcr-test` client with the authorization-code flow and PKCE (the same flow a real MCP client runs), then call the gateway with it.
 
-```bash
-jq -R 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | @base64d | fromjson' <<<"$TOKEN"
-```
+1. Create the PKCE pair and print the login URL:
 
-Expected: `iss`, `aud` and `groups` match the token contract in step 1, and `scope` contains `mcp mcp-web-fetcher`.
+    ```bash
+    VERIFIER=$(openssl rand -base64 48 | tr -d '=+/\n' | cut -c1-64)
+    CHALLENGE=$(printf '%s' "$VERIFIER" | openssl dgst -sha256 -binary | openssl base64 -A | tr '+/' '-_' | tr -d '=')
+    echo "https://keycloak.lab.riupie.com/realms/mcp/protocol/openid-connect/auth?response_type=code&client_id=$CLIENT_ID&redirect_uri=http://localhost:8080/callback&scope=openid%20mcp%20mcp-web-fetcher&code_challenge=$CHALLENGE&code_challenge_method=S256"
+    ```
+
+2. Open the URL in a browser and log in as a user in group `users`. The browser then redirects to `http://localhost:8080/callback?...`. The page fails to load because nothing listens there; copy the `code=` value from the address bar.
+
+3. Exchange the code for a token (it is valid for about a minute):
+
+    ```bash
+    CODE='<paste code>'
+    TOKEN=$(curl -s https://keycloak.lab.riupie.com/realms/mcp/protocol/openid-connect/token \
+      -d grant_type=authorization_code -d client_id="$CLIENT_ID" -d code="$CODE" \
+      -d redirect_uri=http://localhost:8080/callback -d code_verifier="$VERIFIER" | jq -r .access_token)
+    ```
+
+4. Decode it (JWTs are base64url, hence the `gsub`):
+
+    ```bash
+    jq -R 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | @base64d | fromjson' <<<"$TOKEN"
+    ```
+
+    Expected: `iss`, `aud` and `groups` match the token contract in step 1, and `scope` contains `mcp mcp-web-fetcher`.
+
+5. Call the MCP endpoint with the token:
+
+    ```bash
+    curl -si -X POST https://gateway.lab.riupie.com/mcp/web-fetcher \
+      -H "Authorization: Bearer $TOKEN" \
+      -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+      -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"curl","version":"0"}}}' | head
+    ```
+
+    Expected: a `200` response with an `initialize` result. `401` or `403` points to the matching row in [Troubleshooting](#troubleshooting).
+
+You can also connect with a real client (MCP Inspector, or Claude Code: `claude mcp add --transport http web-fetcher https://gateway.lab.riupie.com/mcp/web-fetcher`); it runs the same flow through DCR on its own.
 
 ## Troubleshooting
 
@@ -223,7 +268,7 @@ Expected: `iss`, `aud` and `groups` match the token contract in step 1, and `sco
 
 ## Rollback
 
-- Gateway: `git revert` the policy/route commit in `gitops-fluxcd`, push, and reconcile (step 7). The MCP server is then unauthenticated again, or unreachable if the route itself is reverted.
+- Gateway: revert the route and the policy in one `gitops-fluxcd` commit, push, and reconcile (step 7). Never revert only the policy: the route would then serve the MCP server unauthenticated. To keep the route but pause access, scale the backend to 0 instead.
 - Keycloak: delete client scopes `mcp` and `mcp-web-fetcher` and any `dcr-test` clients. Nothing else depends on them.
 
 ## References

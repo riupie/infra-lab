@@ -5,8 +5,8 @@ site_url = "https://riupie.com/infra-lab/"
 repo_name = "riupie/infra-lab"
 repo_url = "https://github.com/riupie/infra-lab"
 docs_dir = "docs"
-# addons/bind9 is pulled into the DNS playbook via snippets
-watch = ["addons/bind9"]
+# addons/bind9 and addons/keycloak are pulled into the playbooks via snippets
+watch = ["addons/bind9", "addons/keycloak"]
 extra_css = ["stylesheets/extra.css"]
 
 nav = [
@@ -21,6 +21,7 @@ nav = [
   ] },
   { "Playbooks" = [
     { "Set Up Dynamic DNS" = "playbooks/dynamic-dns.md" },
+    { "Run Keycloak" = "playbooks/keycloak.md" },
     { "Secure MCP Servers with OAuth" = "playbooks/mcp-oauth.md" },
   ] },
 ]

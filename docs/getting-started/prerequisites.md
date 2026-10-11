@@ -1,3 +1,7 @@
+---
+description: "System requirements and host setup for the infra-lab KVM environment: libvirt modular daemons, OpenTofu with encrypted state, SSH key and tooling."
+---
+
 # Prerequisites
 
 ## Overview
@@ -11,7 +15,7 @@ This document outlines the system requirements and software prerequisites needed
 
 | Component | Version |
 |-----------|---------|
-| Host OS | Fedora 44 (other RHEL-family hosts work; see the libvirt daemon note below) |
+| Host OS | Fedora 44 (the only tested host; other RHEL-family releases are untested, see the libvirt daemon note below) |
 | libvirt | 12.0 (Fedora 44 package) |
 | OpenTofu | 1.11.5; 1.7 or newer is required for state encryption |
 | libvirt provider | `dmacvicar/libvirt` 0.8.3 (pinned in `providers.tf`) |
@@ -29,7 +33,7 @@ The lab runs 3 VMs (general01, master01, worker01): 5 vCPUs, 14 GB of VM RAM and
 | **Memory** | 24GB | 32GB+ | VMs use 14GB; the rest is host overhead and page cache |
 | **Storage** | 150GB | 250GB+ | SSD/NVMe recommended |
 | **Network** | Any | Any | Lab traffic stays on the libvirt NAT network; internet is needed to download images |
-| **OS** | RHEL-family Linux (Fedora, RHEL, Rocky, AlmaLinux) | Fedora 44 | The tested host |
+| **OS** | RHEL-family Linux (Fedora, RHEL, Rocky, AlmaLinux) | Fedora 44 | Only Fedora 44 is tested; the commands use `dnf` |
 
 ### Virtualization Support
 
