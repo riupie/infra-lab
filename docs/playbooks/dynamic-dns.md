@@ -8,7 +8,12 @@ This playbook runs BIND9 as authoritative DNS for the `lab.riupie.com` zone plus
 
 Use it to set up (or rebuild) the lab DNS server on general01, before configuring External-DNS in Kubernetes (step 3 produces its TSIG key).
 
-Stack: BIND9 9.20 (`internetsystemsconsortium/bind9:9.20`), Docker Compose · Target: `general01` (`192.168.10.9`, Debian 12), driven from the Fedora 44 KVM host · Env: lab
+| Item | Details |
+|---|---|
+| **Stack** | BIND9 9.20 (`internetsystemsconsortium/bind9:9.20`)<br>Docker Compose |
+| **Target** | `general01` (`192.168.10.9`, Debian 12) |
+| **Run from** | Fedora 44 KVM host |
+| **Env** | lab |
 
 The configuration lives in the repo under [`addons/bind9/`](https://github.com/riupie/infra-lab/tree/main/addons/bind9); the files shown below are embedded from there, so edit the repo, not this page.
 
@@ -164,7 +169,7 @@ running
 sudo awk -F'"' '/secret/ {print $2}' /opt/bind9/config/keys/external-dns.key
 ```
 
-Use the printed value as the RFC2136 TSIG secret in the External-DNS configuration, with key name `externaldns-key` and algorithm `hmac-sha512`.
+Use the printed value as the RFC2136 TSIG secret in the External-DNS configuration, with key name `externaldns-key` and algorithm `hmac-sha512`. In the lab it is stored in Infisical as `/external-dns/EXTERNAL_DNS_TSIG_KEY` and delivered by External Secrets; see [Store Secrets with ESO and Infisical](secrets-eso-infisical.md).
 
 ### 8. Resolve the lab zone from the Fedora host
 

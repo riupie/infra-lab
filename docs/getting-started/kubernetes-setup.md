@@ -6,7 +6,12 @@ description: "Install a minimal k0s cluster on the lab VMs with k0sctl, then han
 
 This guide installs a minimal k0s cluster (`lab-cluster`) on master01 and worker01 with k0sctl, then hands the cluster over to Flux, which installs every add-on from [`riupie/gitops-fluxcd`](https://github.com/riupie/gitops-fluxcd).
 
-Stack: k0s `v1.36.4+k0s.1`, k0sctl `v0.33.1`, Calico, flux-operator `0.61.0` (Flux 2.x) · Target: master01 (`192.168.10.10`, controller), worker01 (`192.168.10.11`, worker) · Run from: the Fedora 44 host · Env: lab
+| Item | Details |
+|---|---|
+| **Stack** | k0s `v1.36.4+k0s.1`<br>k0sctl `v0.33.1`<br>Calico<br>flux-operator `0.61.0` (Flux 2.x) |
+| **Target** | master01 (`192.168.10.10`, controller)<br>worker01 (`192.168.10.11`, worker) |
+| **Run from** | Fedora 44 host |
+| **Env** | lab |
 
 ## Prerequisites
 

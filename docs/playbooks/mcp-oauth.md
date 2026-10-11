@@ -8,7 +8,12 @@ This playbook puts JWT authentication and group-based authorization in front of 
 
 Use it when exposing a new MCP server through `gateway-ai`, or when rebuilding the Keycloak realm/scopes. It is not needed for MCP servers that are cluster-internal only.
 
-Stack: agentgateway chart `v1.6.0`, Keycloak 26.x, Flux · Target: realm `mcp`, gateway `gateway-ai` (ns `gateway-system`), kube context `lab-cluster` · Env: lab
+| Item | Details |
+|---|---|
+| **Stack** | agentgateway chart `v1.6.0`<br>Keycloak 26.x<br>Flux |
+| **Target** | Keycloak realm `mcp`<br>Gateway `gateway-ai` (namespace `gateway-system`)<br>Kube context `lab-cluster` |
+| **Run from** | Fedora 44 host |
+| **Env** | lab |
 
 ## Prerequisites
 

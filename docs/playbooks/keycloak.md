@@ -8,7 +8,12 @@ This playbook runs Keycloak and PostgreSQL with Docker Compose on general01 and 
 
 Use it to set up (or rebuild) the identity provider before [Secure MCP Servers with OAuth](mcp-oauth.md).
 
-Stack: Keycloak 26.8.0, PostgreSQL 18, Docker Compose · Target: `general01` (`192.168.10.9`, Debian 12), driven from the Fedora 44 KVM host · Env: lab
+| Item | Details |
+|---|---|
+| **Stack** | Keycloak 26.8.0<br>PostgreSQL 18<br>Docker Compose |
+| **Target** | `general01` (`192.168.10.9`, Debian 12) |
+| **Run from** | Fedora 44 KVM host |
+| **Env** | lab |
 
 !!! warning "Lab-only configuration"
     Keycloak runs in `start-dev` mode, with the bootstrap admin account and the plain-HTTP listener on `8080`/`8443` published on all of general01's interfaces. That is acceptable on the isolated `net-lab` NAT network. Do not reuse it as is outside the lab.

@@ -22,6 +22,7 @@ nav = [
   { "Playbooks" = [
     { "Set Up Dynamic DNS" = "playbooks/dynamic-dns.md" },
     { "Run Keycloak" = "playbooks/keycloak.md" },
+    { "Store Secrets with ESO and Infisical" = "playbooks/secrets-eso-infisical.md" },
     { "Secure MCP Servers with OAuth" = "playbooks/mcp-oauth.md" },
   ] },
 ]

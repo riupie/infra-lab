@@ -91,7 +91,7 @@ k0s with Calico (CNI) and kube-proxy in IPVS mode. k0sctl installs only flux-ope
 | MetalLB | LoadBalancer IPs from `lb-pool` |
 | cert-manager | TLS certificates |
 | External-DNS | Publishes Gateway/HTTPRoute hostnames to BIND9 on general01 |
-| External Secrets, Sealed Secrets | Secret delivery |
+| External Secrets (store: Infisical), Sealed Secrets | Secret delivery, see [Store Secrets with ESO and Infisical](../playbooks/secrets-eso-infisical.md) |
 | agentgateway | Gateway API implementation, MCP and AI traffic (`gateway-ai`) |
 
 ## Minimum host requirements

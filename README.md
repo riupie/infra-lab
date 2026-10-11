@@ -130,5 +130,10 @@ The following picture shows the high level components of opensource solutions us
         <td><a href="https://github.com/bitnami-labs/sealed-secrets">Sealed Secrets</a></td>
         <td>Encrypted secrets that are safe to store in Git</td>
     </tr>
+    <tr>
+        <td></td>
+        <td><a href="https://infisical.com/">Infisical</a></td>
+        <td>Secret store behind External Secrets (lab project, environment <code>dev</code>)</td>
+    </tr>
 </table>
 </div>
