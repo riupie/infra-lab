@@ -116,7 +116,7 @@ Expected: `issuer` is exactly `https://keycloak.lab.riupie.com/realms/mcp`, and 
 |---|---|---|
 | `https://keycloak.lab.riupie.com` returns `404 route not found` or times out, while `http://192.168.10.9:8080` works | The gateway route or DNS record is missing | Check the HTTPRoute in `gitops-fluxcd` and `resolvectl query keycloak.lab.riupie.com` ([Dynamic DNS step 8](dynamic-dns.md#8-resolve-the-lab-zone-from-the-fedora-host)) |
 | `iss` or `issuer` shows `http://…:8080` | `KC_HOSTNAME` is a bare hostname, or the gateway does not send `X-Forwarded-*` | Set the full `https://` URL in `.env`, then `docker compose up -d`. Keep `KC_PROXY_HEADERS=xforwarded` |
-| `keycloak_app` exits with `password authentication failed` | `POSTGRES_PASSWORD` changed after the database volume was created | Restore the old password in `.env`, or recreate the database (see Rollback) |
+| `keycloak_app` exits with `password authentication failed` | `POSTGRES_PASSWORD` changed after the database volume was created | Restore the old password in `.env`. To start from an empty database instead, run `docker compose down -v` (`-v` removes the `postgres_data` volume, and with it the `mcp` realm, users and clients; plain `down` keeps the volume), then `docker compose up -d` |
 | Browser login loops or shows `Invalid parameter: redirect_uri` | The client's redirect URI does not match the URL you open | Open the console through `https://keycloak.lab.riupie.com`, not the node IP |
 
 ## Rollback
@@ -128,8 +128,6 @@ cd /opt/keycloak && docker compose down
 ```
 
 This stops Keycloak; the realm, users and registered clients stay in the `postgres_data` volume. DCR clients and MCP logins stop working until it is started again.
-
-⚠ WARNING: Destructive operation. `docker compose down -v` also deletes the `postgres_data` volume, which removes the `mcp` realm, all users and every registered client. Use it only to rebuild from scratch, then redo [Secure MCP Servers with OAuth](mcp-oauth.md) from step 2.
 
 ## References
 
