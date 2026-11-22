@@ -4,9 +4,7 @@ description: "System requirements and host setup for the infra-lab KVM environme
 
 # Prerequisites
 
-## Overview
-
-This document outlines the system requirements and software prerequisites needed to set up the infra-lab environment. Ensure all requirements are met before proceeding with the infrastructure deployment.
+Prepare the KVM host before [Infrastructure Deployment](infrastructure-deployment.md): check the hardware, install libvirt and OpenTofu, and set up the SSH key and secrets that the VMs need.
 
 !!! warning "Lab-only shortcuts"
     This guide trades some security for simplicity (passphrase in an environment variable, a shared SSH key, a password passed via `TF_VAR_*`). Do not reuse these shortcuts for production.
@@ -21,23 +19,23 @@ This document outlines the system requirements and software prerequisites needed
 | libvirt provider | `dmacvicar/libvirt` 0.8.3 (pinned in `providers.tf`) |
 | VM images | Debian 12 (bookworm) GenericCloud, downloaded as `latest` |
 
-## System Requirements
+## System requirements
 
-### Minimum Requirements
+### Minimum requirements
 
 The lab runs 3 VMs (general01, master01, worker01): 5 vCPUs, 14 GB of VM RAM and about 120 GB of disk in total. Qcow2 volumes are thin-provisioned, but plan for the full size.
 
 | Component | Minimum | Recommended | Notes |
 |-----------|---------|-------------|-------|
-| **CPU** | 4 cores | 8+ cores | Must support virtualization (VT-x/AMD-V) |
-| **Memory** | 24GB | 32GB+ | VMs use 14GB; the rest is host overhead and page cache |
-| **Storage** | 150GB | 250GB+ | SSD/NVMe recommended |
-| **Network** | Any | Any | Lab traffic stays on the libvirt NAT network; internet is needed to download images |
-| **OS** | RHEL-family Linux (Fedora, RHEL, Rocky, AlmaLinux) | Fedora 44 | Only Fedora 44 is tested; the commands use `dnf` |
+| CPU | 4 cores | 8+ cores | Must support virtualization (VT-x/AMD-V) |
+| Memory | 24GB | 32GB+ | VMs use 14GB; the rest is host overhead and page cache |
+| Storage | 150GB | 250GB+ | SSD/NVMe recommended |
+| Network | Any | Any | Lab traffic stays on the libvirt NAT network; internet is needed to download images |
+| OS | RHEL-family Linux (Fedora, RHEL, Rocky, AlmaLinux) | Fedora 44 | Only Fedora 44 is tested; the commands use `dnf` |
 
-### Virtualization Support
+### Virtualization support
 
-Your CPU must support hardware virtualization:
+The CPU must support hardware virtualization:
 
 ```bash
 # Check for virtualization support
@@ -47,11 +45,11 @@ grep -Ec '(vmx|svm)' /proc/cpuinfo
 # If 0, check BIOS settings to enable virtualization
 ```
 
-## Software Installation
+## Software installation
 
 All commands below assume a regular user with `sudo`.
 
-### Install KVM and Virtualization Tools
+### Install KVM and virtualization tools
 
 ```bash
 sudo dnf -y install \
@@ -65,7 +63,7 @@ sudo dnf -y install \
 
 ### Enable the libvirt daemons
 
-Current libvirt uses **modular daemons**: one per driver (`virtqemud` for VMs, `virtnetworkd` for networks, `virtstoraged` for storage pools, and so on), each started on demand by its systemd socket. The monolithic `libvirtd` is deprecated; don't enable it. Fedora enables the modular sockets by default, so this loop usually changes nothing, but it is safe to run:
+Current libvirt uses modular daemons: one per driver (`virtqemud` for VMs, `virtnetworkd` for networks, `virtstoraged` for storage pools, and so on), each started on demand by its systemd socket. The monolithic `libvirtd` is deprecated; don't enable it. Fedora enables the modular sockets by default, so this loop usually changes nothing, but it is safe to run:
 
 ```bash
 for drv in qemu network storage nodedev nwfilter secret interface proxy; do
@@ -115,7 +113,7 @@ The OpenTofu providers in this repo set `qemu:///system` explicitly and don't ne
 
 ### Install OpenTofu
 
-OpenTofu is used for infrastructure automation and VM provisioning. It is not in the default Fedora or Rocky repositories, so add the official OpenTofu repository first. Follow the [OpenTofu RPM installation instructions](https://opentofu.org/docs/intro/install/rpm/) for your distribution, then:
+OpenTofu provisions the network, storage pool and VMs. It is not in the default Fedora or Rocky repositories, so add the official OpenTofu repository first. Follow the [OpenTofu RPM installation instructions](https://opentofu.org/docs/intro/install/rpm/) for your distribution, then:
 
 ```bash
 sudo dnf install -y tofu
@@ -171,7 +169,7 @@ export TF_VAR_admin_password="$(openssl rand -base64 18)"
 echo "$TF_VAR_admin_password"   # store it in your password manager
 ```
 
-### Install Additional Tools
+### Install additional tools
 
 ```bash
 # Packages for cloud-init ISO creation (provider needs mkisofs or a compatible tool)
@@ -191,7 +189,7 @@ sudo dnf install -y virt-manager virt-viewer
 
 ## Verification
 
-### Verify KVM Installation
+### Verify the KVM installation
 
 ```bash
 # Check if KVM modules are loaded
@@ -205,7 +203,7 @@ systemctl is-active libvirtd    # should print inactive
 virt-host-validate
 ```
 
-**Expected `lsmod` output** (module sizes and use counts vary):
+Expected `lsmod` output (module sizes and use counts vary):
 
 ```text
 # AMD
@@ -217,7 +215,7 @@ kvm_intel             294912  6
 kvm                  1146880  1 kvm_intel
 ```
 
-**Expected `virt-host-validate` output** (the QEMU lines must be `PASS`; WARN lines such as IOMMU are common and not blocking):
+Expected `virt-host-validate` output (the QEMU lines must be `PASS`; WARN lines such as IOMMU are common and not blocking):
 
 ```text
   QEMU: Checking for hardware virtualization                 : PASS
@@ -226,7 +224,7 @@ kvm                  1146880  1 kvm_intel
   QEMU: Checking if device /dev/vhost-net exists             : PASS
 ```
 
-### Verify Network Configuration
+### Verify the network
 
 ```bash
 # Check default libvirt network
@@ -245,7 +243,7 @@ virsh net-start default
 virsh net-autostart default
 ```
 
-### Verify Storage
+### Verify storage
 
 ```bash
 # Check available disk space
@@ -271,9 +269,7 @@ virsh pool-list --all
 
 Nothing in this page needs cleanup beyond uninstalling packages. Teardown of the lab itself is in [Infrastructure Deployment](infrastructure-deployment.md#cleanup).
 
-## Next Steps
+## Next steps
 
-Once all prerequisites are met and verified:
-
-1. **[Infrastructure Deployment](infrastructure-deployment.md)** - Deploy VMs and networking
-2. **[Kubernetes Setup](kubernetes-setup.md)** - Install and configure k0s cluster
+1. [Infrastructure Deployment](infrastructure-deployment.md): deploy the network and VMs
+2. [Kubernetes Setup](kubernetes-setup.md): install the k0s cluster

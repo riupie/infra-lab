@@ -2,7 +2,7 @@
 description: "Architecture of the infra-lab: one KVM host, one libvirt NAT network, three Debian VMs and a single-node k0s cluster reconciled by Flux."
 ---
 
-# Lab Architecture
+# Lab architecture
 
 This page describes the lab as it runs today: one KVM host, one libvirt NAT network and three VMs. A single-node k0s cluster runs on two of them, and the third provides DNS and identity.
 
@@ -60,8 +60,8 @@ Address plan:
 | Range | Use |
 |---|---|
 | `192.168.10.1` | Host / libvirt gateway and DNS forwarder |
-| `192.168.10.9–11` | VMs (static, set in `jarvis-kvm/terraform/vm/main.tf`) |
-| `192.168.10.100–110` | MetalLB `IPAddressPool` `lb-pool` (L2); `192.168.10.100` is the agentgateway `Gateway` |
+| `192.168.10.9-11` | VMs (static, set in `jarvis-kvm/terraform/vm/main.tf`) |
+| `192.168.10.100-110` | MetalLB `IPAddressPool` `lb-pool` (L2); `192.168.10.100` is the agentgateway `Gateway` |
 
 ## Virtual machines
 

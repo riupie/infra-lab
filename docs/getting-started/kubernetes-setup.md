@@ -2,7 +2,7 @@
 description: "Install a minimal k0s cluster on the lab VMs with k0sctl, then hand it to Flux via flux-operator, with verification, troubleshooting and teardown."
 ---
 
-# Kubernetes Setup
+# Kubernetes setup
 
 This guide installs a minimal k0s cluster (`lab-cluster`) on master01 and worker01 with k0sctl, then hands the cluster over to Flux, which installs every add-on from [`riupie/gitops-fluxcd`](https://github.com/riupie/gitops-fluxcd).
 

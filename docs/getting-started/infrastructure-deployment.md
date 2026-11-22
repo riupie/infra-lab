@@ -1,16 +1,14 @@
-# Infrastructure Deployment
+# Infrastructure deployment
 
-## Overview
+This guide uses OpenTofu (an open-source fork of Terraform) to create the lab network, storage pool and VMs on the KVM host. At the end, the VMs are ready for [Kubernetes Setup](kubernetes-setup.md).
 
-This guide walks through the automated deployment of virtual infrastructure using OpenTofu (an open-source Terraform alternative). The deployment creates a virtualized environment with networking, storage, and virtual machines ready for Kubernetes installation.
-
-### What Will Be Deployed
+## What gets deployed
 
 | Component | Description | Configuration |
 |-----------|-------------|---------------|
-| **Virtual Network** | One libvirt NAT network | `net-lab` 192.168.10.0/24 (libvirt assigns the `virbrN` bridge name; `virbr1` on the reference host) |
-| **Storage Pool** | Disk storage for VM images | `/var/lib/libvirt/images/` |
-| **Virtual Machines** | 3 VMs | general01 (DNS, Keycloak) + master01 (control plane) + worker01 (worker) |
+| Virtual network | One libvirt NAT network | `net-lab` 192.168.10.0/24 (libvirt assigns the `virbrN` bridge name; `virbr1` on the reference host) |
+| Storage pool | Disk storage for VM images | `/var/lib/libvirt/images/` |
+| Virtual machines | 3 VMs | general01 (DNS, Keycloak) + master01 (control plane) + worker01 (worker) |
 
 ## Prerequisites
 
@@ -21,9 +19,9 @@ Before starting, complete the [Prerequisites](prerequisites.md) guide. You need,
 - an SSH public key (`~/.ssh/id_ed25519.pub`)
 - `LIBVIRT_DEFAULT_URI="qemu:///system"` exported and membership of the `libvirt` group (`virsh uri` prints `qemu:///system`, `virsh list --all` works without `sudo`)
 
-## Repository Setup
+## Repository setup
 
-### Clone the Repository
+### Clone the repository
 
 ```bash
 # Clone the infra-lab repository
@@ -34,7 +32,7 @@ cd infra-lab
 ls -la
 ```
 
-**Expected directory structure** (abbreviated):
+Expected layout (abbreviated):
 
 ```text
 infra-lab/
@@ -61,9 +59,9 @@ infra-lab/
 
     Also ignore the root-level `main.key`: it is a git-crypt encrypted file used by the author and is not needed here.
 
-## Network Deployment
+## Network deployment
 
-### Step 1: Deploy Virtual Network
+### Step 1: Deploy the virtual network
 
 ```bash
 # Navigate to network configuration
@@ -87,7 +85,7 @@ The plan must show **1 to add, 0 to change, 0 to destroy** (`net-lab`). Stop and
 - A bridge for it (typically `virbr1`; libvirt picks the number)
 - Gateway and DNS forwarder `192.168.10.1`
 
-### Verify Network Creation
+### Verify the network
 
 ```bash
 # Check network status
@@ -106,9 +104,9 @@ Expected `virsh net-list`:
  net-lab   active   yes         yes
 ```
 
-## Storage Deployment
+## Storage deployment
 
-### Step 2: Create Storage Pool
+### Step 2: Create storage pool
 
 ```bash
 # Navigate to storage pool configuration
@@ -177,7 +175,7 @@ If the plan shows a different `path` than the existing pool (check with `virsh p
 
     3. `tofu plan -destroy -out=destroy.tfplan` must list only the `debian12` and `rocky9` volumes as destroyed. If the pool appears in the destroy list, stop and re-check steps 1 and 2.
 
-### Verify Storage Pool
+### Verify the storage pool
 
 ```bash
 # Check storage pool status
@@ -200,7 +198,7 @@ Expected `virsh pool-list`:
 
 `virsh vol-list default` must list `debian12` and `rocky9`.
 
-## Virtual Machine Deployment
+## Virtual machine deployment
 
 ### Step 3: Deploy VMs
 
@@ -222,30 +220,23 @@ tofu apply tfplan
 
 The VM stack reads the pool and network outputs from the other two states, so steps 1 and 2 must be applied first, with the same `TF_ENCRYPTION` value.
 
-**VM Specifications:**
+VM specifications:
 
 | VM Name | Role | vCPUs | Memory | System disk | Extra disks | IP address(es) |
 |---------|------|-------|--------|-------------|-------------|----------------|
-| **general01** | DNS (BIND9) + Keycloak | 1 | 2GB | 20GB | n/a | 192.168.10.9 |
-| **master01** | Kubernetes Control Plane | 2 | 4GB | 50GB | n/a | 192.168.10.10 |
-| **worker01** | Kubernetes Worker | 2 | 8GB | 50GB | n/a | 192.168.10.11 |
+| general01 | DNS (BIND9) + Keycloak | 1 | 2GB | 20GB | n/a | 192.168.10.9 |
+| master01 | Kubernetes control plane | 2 | 4GB | 50GB | n/a | 192.168.10.10 |
+| worker01 | Kubernetes worker | 2 | 8GB | 50GB | n/a | 192.168.10.11 |
 
-All VMs use the Debian 12 image. Values come from `jarvis-kvm/terraform/vm/main.tf`; if you change them there, update your expectations accordingly.
+All VMs use the Debian 12 image. Values come from `jarvis-kvm/terraform/vm/main.tf`; if you change them there, this table no longer applies.
 
-### Deployment Process
-
-The VM deployment will:
-
-1. **Create VM Disks**: Individual disk images for each VM, backed by the base images
-2. **Configure Cloud-Init**: User accounts and SSH keys
-3. **Network Assignment**: Static IP addresses in `net-lab`
-4. **Start VMs**: Boot all virtual machines
+The apply creates a disk for each VM backed by the base image, configures the user accounts and SSH keys through cloud-init, assigns the static IP addresses in `net-lab`, and boots the VMs.
 
 ## Verification
 
-### Step 4: Verify VM Deployment
+### Step 4: Verify the VMs
 
-#### Check VM Status
+#### Check VM status
 
 ```bash
 virsh list --all
@@ -261,7 +252,7 @@ virsh list --all
 
 IDs and ordering will differ.
 
-#### Test Network Connectivity
+#### Test network connectivity
 
 ```bash
 for ip in 192.168.10.{9,10,11}; do
@@ -271,7 +262,7 @@ done
 
 Every address should print `up`.
 
-#### SSH Access Test
+#### Test SSH access
 
 ```bash
 # After the VMs have fully booted (usually 1 to 2 minutes)
@@ -291,7 +282,7 @@ If it still fails, confirm you replaced `ssh_keys` with your own public key.
 
 | Symptom | Likely cause | Check / fix |
 |---------|--------------|-------------|
-| Decryption error on `tofu init`/`plan` | Author's state files present, or `TF_ENCRYPTION` not set or different | See the warning under *Repository Setup*; `echo "${TF_ENCRYPTION:0:20}"` must show the key provider block |
+| Decryption error on `tofu init`/`plan` | Author's state files present, or `TF_ENCRYPTION` not set or different | See the warning under *Repository setup*; `echo "${TF_ENCRYPTION:0:20}"` must show the key provider block |
 | `No such file or directory` on `cd` | Wrong working directory | Run `pwd`; every step starts from the previous module directory (`../storage-pool`, `../vm`) |
 | Step 3 plan fails with `Unsupported attribute ... image_...` | Pool outputs not applied or stale | Re-run step 2 and confirm `tofu output` there shows `image_debian12` and `image_rocky9` |
 | `Permission denied (publickey)` | Author's key still in `main.tf` | Replace `ssh_keys` and re-apply the VM stack |
@@ -340,9 +331,7 @@ virsh vol-list default
 
 Remove the saved plan files afterwards (`rm -f tfplan destroy.tfplan` in each directory).
 
-## Next Steps
+## Next steps
 
-Once infrastructure deployment is complete:
-
-1. **[Kubernetes Setup](kubernetes-setup.md)** - Deploy k0s Kubernetes cluster
-2. **[Set Up Dynamic DNS](../playbooks/dynamic-dns.md)** - BIND9 on general01 for the `lab.riupie.com` zone
+1. [Kubernetes Setup](kubernetes-setup.md): deploy the k0s cluster
+2. [Set Up Dynamic DNS](../playbooks/dynamic-dns.md): BIND9 on general01 for the `lab.riupie.com` zone

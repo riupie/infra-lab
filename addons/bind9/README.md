@@ -1,9 +1,9 @@
-### Generate TSIG Key
+### Generate the TSIG key
 
 ```bash
 tsig-keygen -a hmac-sha512 externaldns-key > config/keys/external-dns.key
 ```
-The output should be like this:
+The key file looks like this:
 ```
 key "externaldns-key" {
 	algorithm hmac-sha512;

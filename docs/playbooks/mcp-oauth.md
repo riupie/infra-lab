@@ -308,7 +308,7 @@ You can also connect with a real client (MCP Inspector, or Claude Code: `claude 
 |---|---|---|
 | `404 route not found` on `.well-known` | HTTPRoute change not committed/reconciled | Commit, then reconcile through Flux (step 7) |
 | 401 `JWT token required` after login | Token has wrong `aud` (mapper value ≠ policy `audiences`) or `iss` mismatch | Make `audiences` equal the audience mapper value and `issuer` equal the discovery `issuer` (step 7 consistency rules) |
-| 403 on every request | `groups` missing or user not in `mcp-users`: `mcp` scope not Default, mapper "Full group path" ON, user not in group | `mcp` Default, Full group path OFF, user in `mcp-users` (steps 2–3) |
+| 403 on every request | `groups` missing or user not in `mcp-users`: `mcp` scope not Default, mapper "Full group path" ON, user not in group | `mcp` Default, Full group path OFF, user in `mcp-users` (steps 2 and 3) |
 | Connected, but a tool is missing or denied | User lacks the group mapped to that tool, or the CEL rule is wrong | Check `backend` / `frontend` membership; re-issue the token (groups are a snapshot, access token lifetime 300 s); see the note in step 7 |
 | DCR 403 `insufficient_scope` / "Allowed Client Scopes" before any redirect to Keycloak | Requested scope (`mcp-everything`) not in the anonymous *Allowed Client Scopes* list | Add it in step 5, remove stale DCR clients, re-run `/mcp` |
 | DCR 403 | Trusted Hosts (source IP or redirect host), or requested scope not in Allowed Client Scopes | Adjust the DCR policies (step 5) |

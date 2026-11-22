@@ -1,9 +1,9 @@
 # Infra Lab
-This project is designed as a hands-on learning experience to set up an on-premise Kubernetes cluster using KVM. It covers the deployment of core Kubernetes services and demonstrates how to automate infrastructure setup and application delivery using Infrastructure as Code (IaC) and GitOps principles, leveraging tools like OpenTofu and Flux.
+A hands-on lab for running an on-premise Kubernetes cluster on KVM. It deploys the core Kubernetes services and automates infrastructure setup and application delivery with Infrastructure as Code (OpenTofu) and GitOps (Flux).
 
-Every step of the process—from planning and designing the cluster architecture to manually configuring each component—has been carefully documented. These guides are available in the documentation section, making it easy for anyone to replicate and build their own home Kubernetes cluster.
+The guides in the documentation section cover every step, from planning the cluster architecture to configuring each component by hand, so you can build the same cluster at home.
 
-## Directory Hierarchy
+## Directory hierarchy
 
 ```text
 .
@@ -26,13 +26,13 @@ Every step of the process—from planning and designing the cluster architecture
 └── zensical.toml
 ```
 
-`.git-crypt`: contains gpg files of collaborators who can open encrypted git-crypt file.
+`.git-crypt`: GPG keys of the collaborators who can decrypt the git-crypt encrypted files.
 
-`jarvis-kvm`: terraform code to provision VMs and other resources on top KVM hypervisor.
+`jarvis-kvm`: OpenTofu code that provisions the network, storage pool and VMs on the KVM host.
 
-## Technology Stack
+## Technology stack
 
-The following picture shows the high level components of opensource solutions used so far in the cluster, which installation process has been documented and its deployment has been automated with OpenTofu:
+The diagram and table below list the open-source components the lab uses so far. Their installation is documented in these guides, and their deployment is automated with OpenTofu and Flux.
 
 <p align="center">
   <img src="https://riupie.com/infra-lab/assets/imgs/tech-stack.svg" width="500"/>
@@ -53,7 +53,7 @@ The following picture shows the high level components of opensource solutions us
     <tr>
         <td><img width="32" src="https://cloudinit.readthedocs.io/en/latest/_static/logo.png" alt="Cloud-init logo"></td>
         <td><a href="https://cloudinit.readthedocs.io/en/latest/">Cloud-init</a></td>
-        <td>Automate OS initial installation</td>
+        <td>First-boot configuration of the VMs</td>
     </tr>
     <tr>
         <td><img width="32" src="https://landscape.cncf.io/logos/f26381b645b2f14293a2a597bc98b5bbe1e5e086029de41830ba7c667353bf3e.svg" alt="Containerd logo"></td>
@@ -63,7 +63,7 @@ The following picture shows the high level components of opensource solutions us
     <tr>
         <td><img width="60" src="https://www.tigera.io/app/uploads/2021/07/calico_logo_white.svg" alt="calico logo"></td>
         <td><a href="https://www.tigera.io/project-calico">Calico</a></td>
-        <td>Kubernetes Networking (CNI)</td>
+        <td>Kubernetes networking (CNI)</td>
     </tr>
     <tr>
         <td><img width="32" src="https://coredns.io/images/CoreDNS_Colour_Horizontal.png" alt="CoreDNS logo"></td>
@@ -88,17 +88,17 @@ The following picture shows the high level components of opensource solutions us
     <tr>
         <td><img width="32" src="https://cert-manager.io/images/cert-manager-logo-icon.svg" alt="Cert-manager logo"></td>
         <td><a href="https://cert-manager.io">Cert-manager</a></td>
-        <td>TLS Certificates management</td>
+        <td>TLS certificate management</td>
     </tr>
     <tr>
         <td><img width="32" src="https://k0sproject.io/images/k0s_logo.svg" alt="K0S logo"></td>
         <td><a href="https://k0sproject.io/">K0S</a></td>
-        <td> The simple, solid & certified Kubernetes distribution that works on any infrastructure</td>
+        <td>Lightweight, CNCF-certified Kubernetes distribution</td>
     </tr>
     <tr>
         <td><img width="32" src="https://linux-kvm.org/kvmless/kvmbanner-logo3.png" alt="KVM logo"></td>
         <td><a href="https://linux-kvm.org/page/Main_Page">KVM</a></td>
-        <td> Full virtualization solution for Linux on x86 hardware containing virtualization extensions (Intel VT or AMD-V)</td>
+        <td>Linux hypervisor; needs a CPU with Intel VT-x or AMD-V</td>
     </tr>
     <tr>
         <td><img width="32" src="https://landscape.cncf.io/logos/d19371232c839420223f96327f99332bce52962724a113bd61f3eef10a0bc637.svg" alt="MetalLB logo"></td>
